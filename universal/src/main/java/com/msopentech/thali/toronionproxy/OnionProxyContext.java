@@ -16,6 +16,7 @@ package com.msopentech.thali.toronionproxy;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -145,7 +146,7 @@ abstract public class OnionProxyContext {
 
     public void deleteAllFilesButHiddenServices() throws InterruptedException {
         // It can take a little bit for the Tor OP to detect the connection is dead and kill itself
-        Thread.sleep(1000,0);
+        Thread.sleep(1000);
         for(File file : getWorkingDirectory().listFiles()) {
             if (file.isDirectory()) {
                 if (file.getName().compareTo(hiddenserviceDirectoryName) != 0) {

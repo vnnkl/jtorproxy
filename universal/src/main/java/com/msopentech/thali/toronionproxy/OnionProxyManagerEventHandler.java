@@ -29,13 +29,14 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.toronionproxy;
 
-import net.freehaven.tor.control.EventHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.freehaven.tor.control.EventHandler;
 
 /**
  * Logs the data we get from notifications from the Tor OP. This is really just meant for debugging.
@@ -46,12 +47,12 @@ public class OnionProxyManagerEventHandler implements EventHandler {
     public void circuitStatus(String status, String id, List<String> path, Map<String, String> info) {
         String msg = "CircuitStatus: " + id + " " + status;
         String purpose = info.get("PURPOSE");
-        if(purpose != null) msg += ", purpose: " + purpose;
+        if (purpose != null) msg += ", purpose: " + purpose;
         String hsState = info.get("HS_STATE");
-        if(hsState != null) msg += ", state: " + hsState;
+        if (hsState != null) msg += ", state: " + hsState;
         String rendQuery = info.get("REND_QUERY");
-        if(rendQuery != null) msg += ", service: " + rendQuery;
-        if(!path.isEmpty()) msg += ", path: " + shortenPath(path);
+        if (rendQuery != null) msg += ", service: " + rendQuery;
+        if (!path.isEmpty()) msg += ", path: " + shortenPath(path);
         LOG.info(msg);
     }
 
@@ -70,7 +71,7 @@ public class OnionProxyManagerEventHandler implements EventHandler {
     public void newDescriptors(List<String> orList) {
         Iterator<String> iterator = orList.iterator();
         StringBuilder stringBuilder = new StringBuilder();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             stringBuilder.append(iterator.next());
         }
         LOG.info("newDescriptors: " + stringBuilder.toString());
@@ -86,8 +87,8 @@ public class OnionProxyManagerEventHandler implements EventHandler {
 
     private String shortenPath(List<String> path) {
         StringBuilder s = new StringBuilder();
-        for(String id : path) {
-            if(s.length() > 0) s.append(',');
+        for (String id : path) {
+            if (s.length() > 0) s.append(',');
             s.append(id.substring(1, 7));
         }
         return s.toString();

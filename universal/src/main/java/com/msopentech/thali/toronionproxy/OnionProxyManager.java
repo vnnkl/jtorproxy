@@ -29,18 +29,26 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.toronionproxy;
 
-import net.freehaven.tor.control.ConfigEntry;
-import net.freehaven.tor.control.TorControlConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 
-import java.io.*;
 import java.net.Socket;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.freehaven.tor.control.ConfigEntry;
+import net.freehaven.tor.control.TorControlConnection;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -48,10 +56,10 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * This is where all the fun is, this is the class that handles the heavy work. Note that you will most likely need
  * to actually call into the AndroidOnionProxyManager or JavaOnionProxyManager in order to create the right bindings
  * for your environment.
- *
+ * <p/>
  * This class is thread safe but that's mostly because we hit everything over the head with 'synchronized'. Given the
  * way this class is used there shouldn't be any performance implications of this.
- *
+ * <p/>
  * This class began life as TorPlugin from the Briar Project
  */
 public abstract class OnionProxyManager {
@@ -82,12 +90,13 @@ public abstract class OnionProxyManager {
      * bootstrapped. Sometimes the bootstrap process just hangs for no apparent reason so the method will wait for the
      * given time for bootstrap to finish and if it doesn't then will restart the bootstrap process the given number of
      * repeats.
+     *
      * @param secondsBeforeTimeOut Seconds to wait for boot strapping to finish
-     * @param numberOfRetries Number of times to try recycling the Tor OP before giving up on bootstrapping working
+     * @param numberOfRetries      Number of times to try recycling the Tor OP before giving up on bootstrapping working
      * @return True if bootstrap succeeded, false if there is a problem or the bootstrap couldn't complete in the given
      * time.
      * @throws java.lang.InterruptedException - You know, if we are interrupted
-     * @throws java.io.IOException - IO Exceptions
+     * @throws java.io.IOException            - IO Exceptions
      */
     public synchronized boolean startWithRepeat(int secondsBeforeTimeOut, int numberOfRetries) throws
             InterruptedException, IOException {
@@ -96,17 +105,18 @@ public abstract class OnionProxyManager {
         }
 
         try {
-            for(int retryCount = 0; retryCount < numberOfRetries; ++retryCount) {
+            for (int retryCount = 0; retryCount < numberOfRetries; ++retryCount) {
                 if (installAndStartTorOp() == false) {
                     return false;
                 }
                 enableNetwork(true);
 
                 // We will check every second to see if boot strapping has finally finished
-                for(int secondsWaited = 0; secondsWaited < secondsBeforeTimeOut; ++secondsWaited) {
+                for (int secondsWaited = 0; secondsWaited < secondsBeforeTimeOut; ++secondsWaited) {
                     if (isBootstrapped() == false) {
-                        Thread.sleep(1000,0);
-                    } else {
+                        Thread.sleep(1000, 0);
+                    }
+                    else {
                         return true;
                     }
                 }
@@ -133,6 +143,7 @@ public abstract class OnionProxyManager {
 
     /**
      * Returns the socks port on the IPv4 localhost address that the Tor OP is listening on
+     *
      * @return Discovered socks port
      * @throws java.io.IOException - File errors
      */
@@ -144,7 +155,7 @@ public abstract class OnionProxyManager {
         // This returns a set of space delimited quoted strings which could be Ipv4, Ipv6 or unix sockets
         String[] socksIpPorts = controlConnection.getInfo("net/listeners/socks").split(" ");
 
-        for(String address : socksIpPorts) {
+        for (String address : socksIpPorts) {
             if (address.contains("\"127.0.0.1:")) {
                 // Remember, the last character will be a " so we have to remove that
                 return Integer.parseInt(address.substring(address.lastIndexOf(":") + 1, address.length() - 1));
@@ -156,13 +167,14 @@ public abstract class OnionProxyManager {
 
     /**
      * Publishes a hidden service
+     *
      * @param hiddenServicePort The port that the hidden service will accept connections on
-     * @param localPort The local port that the hidden service will relay connections to
+     * @param localPort         The local port that the hidden service will relay connections to
      * @return The hidden service's onion address in the form X.onion.
      * @throws java.io.IOException - File errors
      */
     public synchronized String publishHiddenService(int hiddenServicePort, int localPort) throws IOException {
-        if(controlConnection == null) {
+        if (controlConnection == null) {
             throw new RuntimeException("Service is not running.");
         }
 
@@ -171,7 +183,10 @@ public abstract class OnionProxyManager {
         if ((currentHiddenServices.size() == 1 &&
                 currentHiddenServices.get(0).key.compareTo("HiddenServiceOptions") == 0 &&
                 currentHiddenServices.get(0).value.compareTo("") == 0) == false) {
-            throw new RuntimeException("Sorry, only one hidden service to a customer and we already have one. Please send complaints to https://github.com/thaliproject/Tor_Onion_Proxy_Library/issues/5 with your scenario so we can justify fixing this.");
+            throw new RuntimeException("Sorry, only one hidden service to a customer and we already have one. Please " +
+                    "send complaints to https://github" +
+                    ".com/thaliproject/Tor_Onion_Proxy_Library/issues/5 with your scenario so we can justify fixing " +
+                    "this.");
         }
 
         LOG.info("Creating hidden service");
@@ -195,7 +210,7 @@ public abstract class OnionProxyManager {
         controlConnection.setConf(config);
         controlConnection.saveConf();
         // Wait for the hostname file to be created/updated
-        if(!hostNameFileObserver.poll(HOSTNAME_TIMEOUT, MILLISECONDS)) {
+        if (!hostNameFileObserver.poll(HOSTNAME_TIMEOUT, MILLISECONDS)) {
             FileUtilities.listFilesToLog(hostnameFile.getParentFile());
             throw new RuntimeException("Wait for hidden service hostname file to be created expired.");
         }
@@ -210,6 +225,7 @@ public abstract class OnionProxyManager {
     /**
      * Kills the Tor OP Process. Once you have called this method nothing is going to work until you either call
      * startWithRepeat or installAndStartTorOp
+     *
      * @throws java.io.IOException - File errors
      */
     public synchronized void stop() throws IOException {
@@ -231,6 +247,7 @@ public abstract class OnionProxyManager {
 
     /**
      * Checks to see if the Tor OP is running (e.g. fully bootstrapped) and open to network connections.
+     *
      * @return True if running
      * @throws java.io.IOException - IO exceptions
      */
@@ -240,11 +257,12 @@ public abstract class OnionProxyManager {
 
     /**
      * Tells the Tor OP if it should accept network connections
+     *
      * @param enable If true then the Tor OP will accept SOCKS connections, otherwise not.
      * @throws java.io.IOException - IO exceptions
      */
     public synchronized void enableNetwork(boolean enable) throws IOException {
-        if(controlConnection == null) {
+        if (controlConnection == null) {
             throw new RuntimeException("Tor is not running!");
         }
         LOG.info("Enabling network: " + enable);
@@ -253,6 +271,7 @@ public abstract class OnionProxyManager {
 
     /**
      * Specifies if Tor OP is accepting network connections
+     *
      * @return True if network is enabled (that doesn't mean that the device is online, only that the Tor OP is trying
      * to connect to the network)
      * @throws java.io.IOException - IO exceptions
@@ -266,10 +285,11 @@ public abstract class OnionProxyManager {
         boolean result = false;
         // It's theoretically possible for us to get multiple values back, if even one is false then we will
         // assume all are false
-        for(ConfigEntry configEntry : disableNetworkSettingValues) {
+        for (ConfigEntry configEntry : disableNetworkSettingValues) {
             if (configEntry.value.equals("1")) {
                 return false;
-            } else {
+            }
+            else {
                 result = true;
             }
         }
@@ -278,6 +298,7 @@ public abstract class OnionProxyManager {
 
     /**
      * Determines if the boot strap process has completed.
+     *
      * @return True if complete
      */
     public synchronized boolean isBootstrapped() {
@@ -292,7 +313,7 @@ public abstract class OnionProxyManager {
             LOG.warn("Control connection is not responding properly to getInfo", e);
         }
 
-        if(phase != null && phase.contains("PROGRESS=100")) {
+        if (phase != null && phase.contains("PROGRESS=100")) {
             LOG.info("Tor has already bootstrapped");
             return true;
         }
@@ -304,8 +325,9 @@ public abstract class OnionProxyManager {
      * Installs all necessary files and starts the Tor OP in offline mode (e.g. networkEnabled(false)). This would
      * only be used if you wanted to start the Tor OP so that the install and related is all done but aren't ready to
      * actually connect it to the network.
+     *
      * @return True if all files installed and Tor OP successfully started
-     * @throws java.io.IOException - IO Exceptions
+     * @throws java.io.IOException            - IO Exceptions
      * @throws java.lang.InterruptedException - If we are, well, interrupted
      */
     public synchronized boolean installAndStartTorOp() throws IOException, InterruptedException {
@@ -343,7 +365,7 @@ public abstract class OnionProxyManager {
         String torPath = onionProxyContext.getTorExecutableFile().getAbsolutePath();
         String configPath = onionProxyContext.getTorrcFile().getAbsolutePath();
         String pid = onionProxyContext.getProcessId();
-        String[] cmd = { torPath, "-f", configPath, OWNER, pid };
+        String[] cmd = {torPath, "-f", configPath, OWNER, pid};
         String[] env = onionProxyContext.getEnvironmentArgsForExec();
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         onionProxyContext.setEnvironmentArgsAndWorkingDirectoryForStart(processBuilder);
@@ -365,14 +387,14 @@ public abstract class OnionProxyManager {
             if (OsData.getOsType() != OsData.OsType.Windows) {
                 int exit = torProcess.waitFor();
                 torProcess = null;
-                if(exit != 0) {
+                if (exit != 0) {
                     LOG.warn("Tor exited with value " + exit);
                     return false;
                 }
             }
 
             // Wait for the auth cookie file to be created/updated
-            if(!cookieObserver.poll(COOKIE_TIMEOUT, MILLISECONDS)) {
+            if (!cookieObserver.poll(COOKIE_TIMEOUT, MILLISECONDS)) {
                 LOG.warn("Auth cookie not created");
                 FileUtilities.listFilesToLog(workingDirectory);
                 return false;
@@ -395,10 +417,10 @@ public abstract class OnionProxyManager {
             // We only set the class property once the connection is in a known good state
             this.controlConnection = controlConnection;
             return true;
-        } catch(SecurityException e) {
+        } catch (SecurityException e) {
             LOG.warn(e.toString(), e);
             return false;
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             LOG.warn("Interrupted while starting Tor", e);
             Thread.currentThread().interrupt();
             return false;
@@ -415,6 +437,7 @@ public abstract class OnionProxyManager {
     /**
      * Returns the root directory in which the Tor Onion Proxy keeps its files. This is mostly intended
      * for debugging purposes.
+     *
      * @return Working directory for Tor Onion Proxy files
      */
     public File getWorkingDirectory() {
@@ -422,15 +445,17 @@ public abstract class OnionProxyManager {
     }
 
     protected void eatStream(final InputStream inputStream, final boolean stdError, final CountDownLatch countDownLatch) {
-        new Thread() {
+        new Thread("eatStream") {
             @Override
             public void run() {
+                Thread.currentThread().setName(stdError ? "eatInputStream" : "eatErrorStream");
                 Scanner scanner = new Scanner(inputStream);
                 try {
-                    while(scanner.hasNextLine()) {
+                    while (scanner.hasNextLine()) {
                         if (stdError) {
                             LOG.error(scanner.nextLine());
-                        } else {
+                        }
+                        else {
                             String nextLine = scanner.nextLine();
                             // We need to find the line where it tells us what the control port is.
                             // The line that will appear in stdio with the control port looks like:
@@ -485,6 +510,7 @@ public abstract class OnionProxyManager {
 
     /**
      * Alas old versions of Android do not support setExecutable.
+     *
      * @param f File to make executable
      * @return True if it worked, otherwise false.
      */
