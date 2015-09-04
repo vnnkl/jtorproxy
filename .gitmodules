@@ -1,0 +1,6 @@
+[submodule "jsocks"]
+	path = jsocks
+	url = git@github.com:ravn/jsocks.git
+[submodule "jtorctl"]
+	path = jtorctl
+	url = git@github.com:JesusMcCloud/jtorctl.git
