@@ -26,14 +26,20 @@ public class TorNodeTest {
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         File dir = new File("tor-test");
         dir.mkdirs();
+        for (String str : args)
+            System.out.print(str + " ");
         node = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(dir) {
         };
         final HiddenServiceDescriptor hiddenService = node.createHiddenService(hsPort);
         new Thread(new Server(hiddenService.getServerSocket())).start();
         serverLatch.await();
-        
-        new Client(node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getservicePort())).run();
-        node.shutdown();
+
+        if (args.length != 2)
+            new Client(node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getservicePort())).run();
+        else
+            new Client(node.connectToHiddenService(args[0], Integer.parseInt(args[1]))).run();
+            
+        // node.shutdown();
     }
 
     private static class Client implements Runnable {
@@ -82,19 +88,22 @@ public class TorNodeTest {
             System.out.println("Wating for incoming connections...");
             serverLatch.countDown();
             try {
-                Socket sock = socket.accept();
-                System.out.println("Accepting Client on port " + sock.getLocalPort());
-                BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-                OutputStreamWriter out = new OutputStreamWriter(sock.getOutputStream());
-                String aLine = null;
-                while ((aLine = in.readLine()) != null) {
-                    System.out.println("ECHOING " + aLine);
-                    out.write("ECHO " + aLine + "\n");
-                    out.flush();
-                    if (aLine.equals("END"))
-                        break;
+                while (true) {
+
+                    Socket sock = socket.accept();
+                    System.out.println("Accepting Client on port " + sock.getLocalPort());
+                    BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+                    OutputStreamWriter out = new OutputStreamWriter(sock.getOutputStream());
+                    String aLine = null;
+                    while ((aLine = in.readLine()) != null) {
+                        System.out.println("ECHOING " + aLine);
+                        out.write("ECHO " + aLine + "\n");
+                        out.flush();
+                        if (aLine.equals("END"))
+                            break;
+                    }
+                    sock.close();
                 }
-                sock.close();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
