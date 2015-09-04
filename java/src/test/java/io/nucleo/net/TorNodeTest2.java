@@ -1,14 +1,10 @@
-package io.nucleo.net.tor;
+package io.nucleo.net;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
-import io.nucleo.net.Client;
-import io.nucleo.net.Server;
-import io.nucleo.net.ServerHandler;
-import io.nucleo.net.exceptions.CommunicationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -26,8 +22,7 @@ public class TorNodeTest2 {
     private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
     private static boolean stopped;
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, 
-            CommunicationException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         File dir = new File("tor-test");
         dir.mkdirs();
         log.debug("Starting up tor");
@@ -41,7 +36,7 @@ public class TorNodeTest2 {
         ServerHandler serverHandler = new ServerHandler();
         final Server server = new Server(hiddenService.getServerSocket(), serverHandler);
         server.start();
-        
+
         Thread.sleep(1000);
 
         log.debug("Connect to hidden service");
