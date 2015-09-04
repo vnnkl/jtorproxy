@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.GregorianCalendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +47,11 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     }
 
     public Socket connectToHiddenService(String onionUrl, int port, int numTries) throws IOException {
+        long before = GregorianCalendar.getInstance().getTimeInMillis();
         for (int i = 0; i < numTries; ++i) {
             try {
                 SocksSocket ssock = new SocksSocket(proxy, onionUrl, port);
+                log.info("Took "+ (GregorianCalendar.getInstance().getTimeInMillis()-before)+" milliseconds to connect to "+onionUrl+":"+port );
                 return ssock;
             } catch (UnknownHostException exx) {
                 try {
