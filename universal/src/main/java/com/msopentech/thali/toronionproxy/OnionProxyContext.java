@@ -201,4 +201,8 @@ abstract public class OnionProxyContext {
     abstract public String getProcessId();
     abstract public WriteObserver generateWriteObserver(File file);
     abstract protected InputStream getAssetOrResourceByName(String fileName) throws IOException;
+    
+    public File getHiddenServiceDirectory() {
+      return new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName );
+    }
 }

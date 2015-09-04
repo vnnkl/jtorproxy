@@ -29,28 +29,30 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.toronionproxy;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-
 import java.net.Socket;
-
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.freehaven.tor.control.ConfigEntry;
 import net.freehaven.tor.control.TorControlConnection;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is where all the fun is, this is the class that handles the heavy work. Note that you will most likely need
@@ -200,7 +202,26 @@ public abstract class OnionProxyManager {
         if (hostnameFile.exists() == false && hostnameFile.createNewFile() == false) {
             throw new RuntimeException("Could not create hostnameFile");
         }
+        // Thanks, Ubuntu!
+        try {
+            switch (OsData.getOsType()) {
+                case Android:
+                case Linux32:
+                case Linux64: {
+                    Set<PosixFilePermission> perms = new HashSet<>();
+                    perms.add(PosixFilePermission.OWNER_READ);
+                    perms.add(PosixFilePermission.OWNER_WRITE);
+                    perms.add(PosixFilePermission.OWNER_EXECUTE);
+                    Files.setPosixFilePermissions(onionProxyContext.getHiddenServiceDirectory()
+                            .toPath(), perms);
+                }
+                default:
+                    break;
+            }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // Watch for the hostname file being created/updated
         WriteObserver hostNameFileObserver = onionProxyContext.generateWriteObserver(hostnameFile);
         // Use the control connection to update the Tor config
@@ -366,7 +387,6 @@ public abstract class OnionProxyManager {
         String configPath = onionProxyContext.getTorrcFile().getAbsolutePath();
         String pid = onionProxyContext.getProcessId();
         String[] cmd = {torPath, "-f", configPath, OWNER, pid};
-        String[] env = onionProxyContext.getEnvironmentArgsForExec();
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         onionProxyContext.setEnvironmentArgsAndWorkingDirectoryForStart(processBuilder);
         Process torProcess = null;
@@ -471,8 +491,10 @@ public abstract class OnionProxyManager {
                         }
                     }
                 } finally {
+                    scanner.close();
                     try {
                         inputStream.close();
+                        
                     } catch (IOException e) {
                         LOG.error("Couldn't close input stream in eatStream", e);
                     }
