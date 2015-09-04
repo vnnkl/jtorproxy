@@ -12,9 +12,6 @@
 bin/
 gen/
 
-# Gradle files
-.gradle/
-build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -24,3 +21,9 @@ proguard/
 
 # intellij
 .idea/
+!.idea/codeStyleSettings.xml
+*.iml
+.DS_Store
+.classpath
+.project
+.settings
