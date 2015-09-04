@@ -1,9 +1,14 @@
 package io.nucleo.net;
 
-import com.msopentech.thali.toronionproxy.FileUtilities;
-import com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler;
-import com.msopentech.thali.toronionproxy.OsData;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -11,15 +16,27 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
+
 import net.freehaven.tor.control.TorControlConnection;
+
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import socks.Socks5Proxy;
-import socks.SocksException;
-import socks.SocksSocket;
+
+import com.msopentech.thali.toronionproxy.FileUtilities;
+import com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler;
+import com.msopentech.thali.toronionproxy.OsData;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import com.runjva.sourceforge.jsocks.protocol.SocksException;
+import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 
 public class TorProxy {
     private static final Logger log = LoggerFactory.getLogger(TorProxy.class);
