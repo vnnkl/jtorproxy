@@ -6,21 +6,21 @@ import java.net.ServerSocket;
 
 public class HiddenServiceDescriptor {
 
-    private final String name;
+    private final String onionUrl;
     private final int localPort;
     private final int servicePort;
     private final ServerSocket serverSocket;
 
-    public HiddenServiceDescriptor(String name, int localPort, int servicePort) throws IOException {
-        this.name=name;
+    public HiddenServiceDescriptor(String onionUrl, int localPort, int servicePort) throws IOException {
+        this.onionUrl=onionUrl;
         this.localPort=localPort;
         this.servicePort=servicePort;
         this.serverSocket = new ServerSocket();
         this.serverSocket.bind(new InetSocketAddress(localPort));
     }
 
-    public String getName() {
-        return name;
+    public String getOnionUrl() {
+        return onionUrl;
     }
 
     public int getLocalPort() {
