@@ -2,23 +2,27 @@ package io.nucleo;
 
 import io.nucleo.net.TorProxy;
 import io.nucleo.util.Tuple3;
-
 import java.io.File;
-
 import java.nio.file.Paths;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.*;
-import javafx.scene.control.*;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +42,7 @@ public class SimpleChatApp extends Application {
     private TorProxy torProxy1;
     private TorProxy torProxy2;
     private boolean shuttingDown;
-    private boolean isTorProxy1SetupHiddenServiceCompleted, isTorProxy2SetupHiddenServiceCompleted,
-            torProxy1DataSent, torProxy2DataSent,
-            torProxy1DataArrived, torProxy2DataArrived;
+    private boolean isTorProxy1SetupHiddenServiceCompleted, isTorProxy2SetupHiddenServiceCompleted;
     private TextArea leftTextArea, rightTextArea;
     private Button startTorButton, stopTorButton;
 
@@ -106,9 +108,7 @@ public class SimpleChatApp extends Application {
 
         // exit handlers
         scene.setOnKeyReleased(keyEvent -> {
-            if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) ||
-                    new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent))
-                shutDown();
+            if (new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.Q, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) shutDown();
         });
         primaryStage.setOnCloseRequest(e -> shutDown());
         Thread shutDownHookThread = new Thread(SimpleChatApp.this::shutDown, "SimpleChatApp.ShutDownHook");
@@ -142,8 +142,7 @@ public class SimpleChatApp extends Application {
         shuttingDown = false;
         startTorButton.setDisable(true);
         stopTorButton.setDisable(false);
-        String userDataDir = Paths.get(System.getProperty("user.home"), "Library", "Application Support",
-                "SimpleChatApp").toString();
+        String userDataDir = Paths.get(System.getProperty("user.home"), "Library", "Application Support", "SimpleChatApp").toString();
         torProxy1 = new TorProxy(torProxy1LocalPort, new File(userDataDir, "torProxy1"));
         torProxy1.addStartupCompletedListener(() -> {
             Platform.runLater(SimpleChatApp.this::torProxy1StartupCompleted);

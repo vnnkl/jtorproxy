@@ -1,40 +1,22 @@
 package io.nucleo.net;
 
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
-
+import com.msopentech.thali.toronionproxy.FileUtilities;
+import com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler;
+import com.msopentech.thali.toronionproxy.OsData;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.msopentech.thali.toronionproxy.FileUtilities;
-import com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler;
-import com.msopentech.thali.toronionproxy.OsData;
 import net.freehaven.tor.control.TorControlConnection;
 import org.apache.commons.lang3.SerializationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import socks.Socks5Proxy;
 import socks.SocksException;
 import socks.SocksSocket;
@@ -57,8 +39,7 @@ public class TorProxy {
     private final File directory;
 
     private final List<Callable<Void>> startupCompletedListeners = new CopyOnWriteArrayList<Callable<Void>>();
-    private final List<Consumer<Serializable>> receivingDataListener = new
-            CopyOnWriteArrayList<Consumer<Serializable>>();
+    private final List<Consumer<Serializable>> receivingDataListener = new CopyOnWriteArrayList<Consumer<Serializable>>();
     private final Map<String, ClientSocket> clientSockets = new ConcurrentHashMap<String, ClientSocket>();
 
     // mutable
@@ -188,18 +169,14 @@ public class TorProxy {
     public void setupHiddenService(int hiddenServicePort, Callable<Void> onCompleteHandler) throws Exception {
         log.debug("setupHiddenService");
 
-        if (!hostnameFile.getParentFile().exists() && !hostnameFile.getParentFile().mkdirs())
-            throw new IOException("Could not create hostnameFile parent directory");
+        if (!hostnameFile.getParentFile().exists() && !hostnameFile.getParentFile().mkdirs()) throw new IOException("Could not create hostnameFile parent directory");
 
         // Use the control connection to update the Tor config
-        List<String> config = Arrays.asList(
-                "HiddenServiceDir " + hostnameFile.getParentFile().getAbsolutePath(),
-                "HiddenServicePort " + hiddenServicePort + " 127.0.0.1:" + localPort);
+        List<String> config = Arrays.asList("HiddenServiceDir " + hostnameFile.getParentFile().getAbsolutePath(), "HiddenServicePort " + hiddenServicePort + " 127.0.0.1:" + localPort);
         controlConnection.setConf(config);
         controlConnection.saveConf();
 
-        while (!Thread.interrupted() && !hostnameFile.exists())
-            Thread.sleep(100, 0);
+        while (!Thread.interrupted() && !hostnameFile.exists()) Thread.sleep(100, 0);
 
         // give a bit of time for the file to be finished
         Thread.sleep(200, 0);
@@ -212,8 +189,7 @@ public class TorProxy {
         onCompleteHandler.call();
     }
 
-    public void setupClientSocket(String onionAddress, int hiddenServicePort, final Callable<Void> onCompleteHandler)
-            throws Exception {
+    public void setupClientSocket(String onionAddress, int hiddenServicePort, final Callable<Void> onCompleteHandler) throws Exception {
         log.debug("setupClientSocket");
         ClientSocket clientSocket = new ClientSocket(onionAddress, hiddenServicePort);
         clientSocket.createSocket(new Consumer<Socket>() {
@@ -295,21 +271,18 @@ public class TorProxy {
 
     private void installFiles() throws IOException {
         log.debug("installFiles");
-        if (!directory.exists() && !directory.mkdirs())
-            throw new IOException("Could not create root directory: " + directory);
+        if (!directory.exists() && !directory.mkdirs()) throw new IOException("Could not create root directory: " + directory);
 
         Util.installFile(GEOIP, geoipFile, false);
         Util.installFile(GEOIP6, geoip6File, false);
 
         log.debug("setupCookie");
-        if (!cookieFile.getParentFile().exists() && !cookieFile.getParentFile().mkdirs())
-            throw new IOException("Could not create cookieFile parent directory");
+        if (!cookieFile.getParentFile().exists() && !cookieFile.getParentFile().mkdirs()) throw new IOException("Could not create cookieFile parent directory");
         if (OsData.getOsType() == OsData.OsType.Android) Util.installFile(TOR_EXEC, torExecFile, false);
         else Util.extractNativeTorZip(directory);
 
         File file = new File(directory, Util.getTorExecutableFileName());
-        if (!file.setExecutable(true))
-            throw new IOException("Could not set file executable: " + file.getAbsolutePath());
+        if (!file.setExecutable(true)) throw new IOException("Could not set file executable: " + file.getAbsolutePath());
     }
 
     private void installAndUpdateConfig() throws IOException {
@@ -330,8 +303,7 @@ public class TorProxy {
             printWriter.println("GeoIPFile " + geoipFile.getName());
             printWriter.println("GeoIPv6File " + geoip6File.getName());
         } finally {
-            if (printWriter != null)
-                printWriter.close();
+            if (printWriter != null) printWriter.close();
         }
     }
 
@@ -367,8 +339,7 @@ public class TorProxy {
         Util.listenOnTorErrorStream(torProcess.getErrorStream());
         Future<Integer> future = Util.listenOnTorInputStream(torProcess.getInputStream());
         controlListenerPort = future.get();
-        if (controlListenerPort == null)
-            return false;
+        if (controlListenerPort == null) return false;
         log.debug("controlListenerPort=" + controlListenerPort);
 
         // On platforms other than Windows we run as a daemon and so we need to wait for the process to detach
@@ -397,8 +368,7 @@ public class TorProxy {
         log.debug("checkCookie");
         long startTs = System.currentTimeMillis();
         while (!Thread.interrupted() && !cookieFile.exists()) {
-            if (System.currentTimeMillis() - startTs < TIMEOUT_COOKIE)
-                return false;
+            if (System.currentTimeMillis() - startTs < TIMEOUT_COOKIE) return false;
             Thread.sleep(100, 0);
         }
         return true;
@@ -432,12 +402,9 @@ public class TorProxy {
         while (!Thread.interrupted()) {
             String phase = controlConnection.getInfo("status/bootstrap-phase");
             log.info("bootstrap-phase=" + phase);
-            if (phase.contains("PROGRESS=100"))
-                return true;
-            else if (System.currentTimeMillis() - startTs > TIMEOUT_BOOTSTRAP)
-                return false;
-            else
-                Thread.sleep(300, 0);
+            if (phase.contains("PROGRESS=100")) return true;
+            else if (System.currentTimeMillis() - startTs > TIMEOUT_BOOTSTRAP) return false;
+            else Thread.sleep(300, 0);
         }
         return false;
     }
@@ -449,13 +416,11 @@ public class TorProxy {
         for (String address : socksIpPorts) {
             if (address.contains("\"127.0.0.1:")) {
                 // Remember, the last character will be a " so we have to remove that
-                listeningProxyPort = Integer.parseInt(address.substring(address.lastIndexOf(":") + 1, address.length
-                        () - 1));
+                listeningProxyPort = Integer.parseInt(address.substring(address.lastIndexOf(":") + 1, address.length() - 1));
                 log.debug("listeningProxyPort=" + listeningProxyPort);
             }
         }
-        if (listeningProxyPort == -1)
-            throw new IOException("Could not request listeningProxyPort from controlConnection");
+        if (listeningProxyPort == -1) throw new IOException("Could not request listeningProxyPort from controlConnection");
     }
 
     private void setupServerSocket() {
@@ -545,6 +510,7 @@ public class TorProxy {
         }
 
         public void createSocket(final Consumer<Socket> socketReadyListener) {
+            log.debug("createSocket");
             executorService.submit(new Callable<Void>() {
                 @Override
                 public Void call() throws InterruptedException, IOException {
@@ -573,8 +539,7 @@ public class TorProxy {
                             Thread.sleep(5000);
                         }
                     }
-                    if (socksSocket == null)
-                        throw new IOException("Could not create socket after 5 times retrying");
+                    if (socksSocket == null) throw new IOException("Could not create socket after 5 times retrying");
 
                     // socksSocket = Utilities.socks4aSocketConnection(onionAddress, hiddenServicePort, "127.0.0.1", 
                     // listeningProxyPort);
@@ -592,9 +557,11 @@ public class TorProxy {
 
         public void close() {
             try {
-                socksSocket.getOutputStream().close();
-                socksSocket.getInputStream().close();
-                socksSocket.close();
+                if (socksSocket != null) {
+                    socksSocket.getOutputStream().close();
+                    socksSocket.getInputStream().close();
+                    socksSocket.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
