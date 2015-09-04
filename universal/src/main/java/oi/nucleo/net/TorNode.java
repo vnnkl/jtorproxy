@@ -21,13 +21,15 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     private static final int RETRY_SLEEP = 500;
     private static final int TOTAL_SEC_PER_STARTUP = 4 * 60;
     private static final int TRIES_PER_STARTUP = 5;
+    private static final int TRIES_PER_HS_STARTUP = 150;
 
     private static final Logger log = LoggerFactory.getLogger(TorNode.class);
 
     private final OnionProxyManager tor;
     private final Socks5Proxy proxy;
 
-    public TorNode(File torDirectory) throws IOException {        
+    @SuppressWarnings("unchecked")
+    public TorNode(File torDirectory) throws IOException {
         Class<M> mgr = (Class<M>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         Class<C> ctx = (Class<C>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
         tor = initTor(torDirectory, mgr, ctx);
@@ -47,15 +49,22 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     }
 
     public Socket connectToHiddenService(String onionUrl, int port, int numTries) throws IOException {
+        return connectToHiddenService(onionUrl, port, numTries, true);
+    }
+
+    private Socket connectToHiddenService(String onionUrl, int port, int numTries, boolean debug) throws IOException {
         long before = GregorianCalendar.getInstance().getTimeInMillis();
         for (int i = 0; i < numTries; ++i) {
             try {
                 SocksSocket ssock = new SocksSocket(proxy, onionUrl, port);
-                log.info("Took "+ (GregorianCalendar.getInstance().getTimeInMillis()-before)+" milliseconds to connect to "+onionUrl+":"+port );
+                if (debug)
+                    log.info("Took " + (GregorianCalendar.getInstance().getTimeInMillis() - before)
+                            + " milliseconds to connect to " + onionUrl + ":" + port);
                 return ssock;
             } catch (UnknownHostException exx) {
                 try {
-                    log.debug("Try " + (i + 1) + " connecting to " + onionUrl + ":" + port + " failed. retrying...");
+                    if (debug)
+                        log.debug("Try " + (i + 1) + " connecting to " + onionUrl + ":" + port + " failed. retrying...");
                     Thread.sleep(RETRY_SLEEP);
                     continue;
                 } catch (InterruptedException e) {
@@ -68,8 +77,44 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     }
 
     public HiddenServiceDescriptor createHiddenService(int localPort, int servicePort) throws IOException {
+        long before = GregorianCalendar.getInstance().getTimeInMillis();
         String hiddenServiceName = tor.publishHiddenService(servicePort, localPort);
-        return new HiddenServiceDescriptor(hiddenServiceName, localPort, servicePort);
+        final HiddenServiceDescriptor hiddenServiceDescriptor = new HiddenServiceDescriptor(hiddenServiceName,
+                localPort, servicePort);
+        return tryConnectToHiddenService(servicePort, before, hiddenServiceName, hiddenServiceDescriptor);
+
+    }
+
+    private HiddenServiceDescriptor tryConnectToHiddenService(int servicePort, long before, String hiddenServiceName,
+            final HiddenServiceDescriptor hiddenServiceDescriptor) throws IOException {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    hiddenServiceDescriptor.getServerSocket().accept().close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        for (int i = 0; i < TRIES_PER_HS_STARTUP; ++i) {
+            try {
+                final Socket socket = connectToHiddenService(hiddenServiceName, servicePort, 1, false);
+                socket.close();
+            } catch (IOException e) {
+                log.info("Hidden service " + hiddenServiceName + ":" + servicePort + " is not yet reachable");
+                try {
+                    Thread.sleep(RETRY_SLEEP);
+                } catch (InterruptedException e1) {
+                }
+                continue;
+            }
+            log.info("Took " + (GregorianCalendar.getInstance().getTimeInMillis() - before)
+                    + " milliseconds to connect to publish " + hiddenServiceName + ":" + servicePort);
+            return hiddenServiceDescriptor;
+        }
+        throw new IOException("Could not publish Hidden Service!");
     }
 
     public HiddenServiceDescriptor createHiddenService(int port) throws IOException {

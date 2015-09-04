@@ -31,7 +31,7 @@ public class TorNodeTest {
         final HiddenServiceDescriptor hiddenService = node.createHiddenService(hsPort);
         new Thread(new Server(hiddenService.getServerSocket())).start();
         serverLatch.await();
-        Thread.sleep(60000); //Well, it does take some time to be published...
+        
         new Client(node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getservicePort())).run();
         node.shutdown();
     }
