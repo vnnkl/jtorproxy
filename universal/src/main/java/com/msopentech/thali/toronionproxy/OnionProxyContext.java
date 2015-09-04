@@ -9,7 +9,7 @@ INCLUDING WITHOUT LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITN
 MERCHANTABLITY OR NON-INFRINGEMENT.
 
 See the Apache 2 License for the specific language governing permissions and limitations under the License.
-*/
+ */
 
 package com.msopentech.thali.toronionproxy;
 
@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class encapsulates data that is handled differently in Java and Android as well
- * as managing file locations.
+ * This class encapsulates data that is handled differently in Java and Android
+ * as well as managing file locations.
  */
 abstract public class OnionProxyContext {
     protected final static String hiddenserviceDirectoryName = "hiddenservice";
@@ -45,15 +45,25 @@ abstract public class OnionProxyContext {
         torrcFile = new File(getWorkingDirectory(), torrcName);
         torExecutableFile = new File(getWorkingDirectory(), getTorExecutableFileName());
         cookieFile = new File(getWorkingDirectory(), ".tor/control_auth_cookie");
-        hostnameFile = new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName + "/hostname");
+        hostnameFile = new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName
+                + "/hostname");
     }
 
     public void installFiles() throws IOException, InterruptedException {
-        // This is sleezy but we have cases where an old instance of the Tor OP needs an extra second to
-        // clean itself up. Without that time we can't do things like delete its binary (which we currently
-        // do by default, something we hope to fix with https://github.com/thaliproject/Tor_Onion_Proxy_Library/issues/13
-        Thread.sleep(1000,0);
+        // This is sleezy but we have cases where an old instance of the Tor OP
+        // needs an extra second to
+        // clean itself up. Without that time we can't do things like delete its
+        // binary (which we currently
+        // do by default, something we hope to fix with
+        // https://github.com/thaliproject/Tor_Onion_Proxy_Library/issues/13
+        Thread.sleep(1000, 0);
 
+        try {
+            File dotTorDir = new File(getWorkingDirectory(), ".tor");
+            if (dotTorDir.exists())
+                FileUtilities.recursiveFileDelete(dotTorDir);
+        } catch (Exception e) {
+        }
         if (workingDirectory.exists() == false && workingDirectory.mkdirs() == false) {
             throw new RuntimeException("Could not create root directory!");
         }
@@ -62,11 +72,10 @@ abstract public class OnionProxyContext {
         FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(geoIpv6Name), geoIpv6File);
         FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(torrcName), torrcFile);
 
-        switch(OsData.getOsType()) {
+        switch (OsData.getOsType()) {
             case Android:
-                FileUtilities.cleanInstallOneFile(
-                        getAssetOrResourceByName(getPathToTorExecutable() + getTorExecutableFileName()),
-                        torExecutableFile);
+                FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(getPathToTorExecutable()
+                        + getTorExecutableFileName()), torExecutableFile);
                 break;
             case Windows:
             case Linux32:
@@ -82,7 +91,9 @@ abstract public class OnionProxyContext {
 
     /**
      * Sets environment variables and working directory needed for Tor
-     * @param processBuilder we will call start on this to run Tor
+     * 
+     * @param processBuilder
+     *            we will call start on this to run Tor
      */
     public void setEnvironmentArgsAndWorkingDirectoryForStart(ProcessBuilder processBuilder) {
         processBuilder.directory(getWorkingDirectory());
@@ -91,8 +102,10 @@ abstract public class OnionProxyContext {
         switch (OsData.getOsType()) {
             case Linux32:
             case Linux64:
-                // We have to provide the LD_LIBRARY_PATH because when looking for dynamic libraries
-                // Linux apparently will not look in the current directory by default. By setting this
+                // We have to provide the LD_LIBRARY_PATH because when looking
+                // for dynamic libraries
+                // Linux apparently will not look in the current directory by
+                // default. By setting this
                 // environment variable we fix that.
                 environment.put("LD_LIBRARY_PATH", getWorkingDirectory().getAbsolutePath());
             default:
@@ -102,12 +115,14 @@ abstract public class OnionProxyContext {
 
     public String[] getEnvironmentArgsForExec() {
         List<String> envArgs = new ArrayList<String>();
-        envArgs.add("HOME=" + getWorkingDirectory().getAbsolutePath() );
-        switch(OsData.getOsType()) {
+        envArgs.add("HOME=" + getWorkingDirectory().getAbsolutePath());
+        switch (OsData.getOsType()) {
             case Linux32:
             case Linux64:
-                // We have to provide the LD_LIBRARY_PATH because when looking for dynamic libraries
-                // Linux apparently will not look in the current directory by default. By setting this
+                // We have to provide the LD_LIBRARY_PATH because when looking
+                // for dynamic libraries
+                // Linux apparently will not look in the current directory by
+                // default. By setting this
                 // environment variable we fix that.
                 envArgs.add("LD_LIBRARY_PATH=" + getWorkingDirectory().getAbsolutePath());
             default:
@@ -145,9 +160,10 @@ abstract public class OnionProxyContext {
     }
 
     public void deleteAllFilesButHiddenServices() throws InterruptedException {
-        // It can take a little bit for the Tor OP to detect the connection is dead and kill itself
+        // It can take a little bit for the Tor OP to detect the connection is
+        // dead and kill itself
         Thread.sleep(1000);
-        for(File file : getWorkingDirectory().listFiles()) {
+        for (File file : getWorkingDirectory().listFiles()) {
             if (file.isDirectory()) {
                 if (file.getName().compareTo(hiddenserviceDirectoryName) != 0) {
                     FileUtilities.recursiveFileDelete(file);
@@ -161,8 +177,10 @@ abstract public class OnionProxyContext {
     }
 
     /**
-     * Files we pull out of the AAR or JAR are typically at the root but for executables outside
-     * of Android the executable for a particular platform is in a specific sub-directory.
+     * Files we pull out of the AAR or JAR are typically at the root but for
+     * executables outside of Android the executable for a particular platform
+     * is in a specific sub-directory.
+     * 
      * @return Path to executable in JAR Resources
      */
     protected String getPathToTorExecutable() {
@@ -171,9 +189,13 @@ abstract public class OnionProxyContext {
             case Android:
                 return "";
             case Windows:
-                return path + "windows/x86/"; // We currently only support the x86 build but that should work everywhere
+                return path + "windows/x86/"; // We currently only support the
+                                              // x86 build but that should work
+                                              // everywhere
             case Mac:
-                return path +  "osx/x64/"; // I don't think there even is a x32 build of Tor for Mac, but could be wrong.
+                return path + "osx/x64/"; // I don't think there even is a x32
+                                          // build of Tor for Mac, but could be
+                                          // wrong.
             case Linux32:
                 return path + "linux/x86/";
             case Linux64:
@@ -184,7 +206,7 @@ abstract public class OnionProxyContext {
     }
 
     protected String getTorExecutableFileName() {
-        switch(OsData.getOsType()) {
+        switch (OsData.getOsType()) {
             case Android:
             case Linux32:
             case Linux64:
@@ -199,10 +221,12 @@ abstract public class OnionProxyContext {
     }
 
     abstract public String getProcessId();
+
     abstract public WriteObserver generateWriteObserver(File file);
+
     abstract protected InputStream getAssetOrResourceByName(String fileName) throws IOException;
-    
+
     public File getHiddenServiceDirectory() {
-      return new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName );
+        return new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName);
     }
 }

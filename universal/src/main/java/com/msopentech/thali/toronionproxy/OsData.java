@@ -75,7 +75,9 @@ public class OsData {
             Scanner scanner = new Scanner(unameProcess.getInputStream());
             if (scanner.hasNextLine()) {
                 unameOutput = scanner.nextLine();
+                scanner.close();
             } else {
+                scanner.close();
                 throw new RuntimeException("Couldn't get output from uname call");
             }
 
@@ -96,6 +98,7 @@ public class OsData {
         } catch (InterruptedException e) {
             throw new RuntimeException("Uname failure", e);
         } finally {
+           
             if (unameProcess != null) {
                 unameProcess.destroy();
             }

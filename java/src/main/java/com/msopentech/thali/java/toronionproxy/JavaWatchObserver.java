@@ -29,16 +29,21 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.java.toronionproxy;
 
-import com.msopentech.thali.toronionproxy.OsData;
-import com.msopentech.thali.toronionproxy.WriteObserver;
-import com.sun.nio.file.SensitivityWatchEventModifier;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.concurrent.TimeUnit;
+import com.msopentech.thali.toronionproxy.OsData;
+import com.msopentech.thali.toronionproxy.WriteObserver;
 
 /**
  * Watches to see if a particular file is changed
@@ -71,7 +76,7 @@ public class JavaWatchObserver implements WriteObserver {
             // http://stackoverflow.com/questions/9588737/is-java-7-watchservice-slow-for-anyone-else
             key = fileToWatch.getParentFile().toPath().register(watchService, new WatchEvent.Kind[]
                     {StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE,
-                    StandardWatchEventKinds.ENTRY_MODIFY}, SensitivityWatchEventModifier.HIGH);
+                    StandardWatchEventKinds.ENTRY_MODIFY});
         }
     }
 

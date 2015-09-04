@@ -16,15 +16,15 @@
     <module>universal</module>
     <!--<module>android</module> -->
     <module>java</module>
-    <module>gui</module>
+    <!--<module>gui</module> -->
   </modules>
 
   <build>
     <plugins>
-      
 
-      <!--<plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-enforcer-plugin</artifactId> <version>1.2</version> 
-        <executions> <execution> <id>enforce</id> <configuration> <rules> <DependencyConvergence /> </rules> </configuration> <goals> 
+
+      <!--<plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-enforcer-plugin</artifactId> <version>1.2</version>
+        <executions> <execution> <id>enforce</id> <configuration> <rules> <DependencyConvergence /> </rules> </configuration> <goals>
         <goal>enforce</goal> </goals> </execution> </executions> </plugin> -->
 
     </plugins>
