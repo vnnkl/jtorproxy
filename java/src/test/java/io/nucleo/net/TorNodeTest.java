@@ -11,27 +11,22 @@ import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
-import org.omg.Messaging.SyncScopeHelper;
-
 import oi.nucleo.net.HiddenServiceDescriptor;
 import oi.nucleo.net.TorNode;
-
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
 public class TorNodeTest {
 
     private static final int hsPort = 55555;
     private static CountDownLatch serverLatch = new CountDownLatch(1);
-    private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
+    @SuppressWarnings("rawtypes")
+    private static TorNode node;
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         File dir = new File("tor-test");
         dir.mkdirs();
         for (String str : args)
             System.out.print(str + " ");
-        node = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(dir) {
-        };
+        node = new JTorNode(dir); 
         final HiddenServiceDescriptor hiddenService = node.createHiddenService(hsPort);
         new Thread(new Server(hiddenService.getServerSocket())).start();
         serverLatch.await();

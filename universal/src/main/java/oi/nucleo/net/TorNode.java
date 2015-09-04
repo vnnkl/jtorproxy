@@ -32,6 +32,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     public TorNode(File torDirectory) throws IOException {
         Class<M> mgr = (Class<M>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         Class<C> ctx = (Class<C>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
+        log.debug("Running Tornode with " +mgr.getSimpleName()+" and  "+ctx.getSimpleName());
         tor = initTor(torDirectory, mgr, ctx);
         int proxyPort = tor.getIPv4LocalHostSocksPort();
         log.info("TorSocks running on port " + proxyPort);
