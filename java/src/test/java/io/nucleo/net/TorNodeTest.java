@@ -11,6 +11,8 @@ import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
+import org.omg.Messaging.SyncScopeHelper;
+
 import oi.nucleo.net.HiddenServiceDescriptor;
 import oi.nucleo.net.TorNode;
 
@@ -36,18 +38,28 @@ public class TorNodeTest {
 
         if (args.length != 2)
             new Client(node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getservicePort())).run();
-        else
-            new Client(node.connectToHiddenService(args[0], Integer.parseInt(args[1]))).run();
-            
+        else {
+            System.out.println("\nHs Running, pres return to connect to " + args[0] + ":" + args[1]);
+            final Scanner scanner = new Scanner(System.in);
+            scanner.nextLine();
+            new Client(node.connectToHiddenService(args[0], Integer.parseInt(args[1])), scanner).run();
+        }
+
         // node.shutdown();
     }
 
     private static class Client implements Runnable {
 
         private Socket sock;
+        private final Scanner scanner;
+
+        private Client(Socket sock, Scanner scanner) {
+            this.sock = sock;
+            this.scanner = scanner;
+        }
 
         private Client(Socket sock) {
-            this.sock = sock;
+            this(sock, new Scanner(System.in));
         }
 
         @Override
@@ -55,16 +67,15 @@ public class TorNodeTest {
             try {
                 BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
                 OutputStreamWriter out = new OutputStreamWriter(sock.getOutputStream());
-                Scanner scan = new Scanner(System.in);
                 System.out.print("\n> ");
-                String input = scan.nextLine();
+                String input = scanner.nextLine();
                 out.write(input + "\n");
                 out.flush();
                 String aLine = null;
                 while ((aLine = in.readLine()) != null) {
                     System.out.println(aLine);
                     System.out.print("\n> ");
-                    input = scan.nextLine();
+                    input = scanner.nextLine();
                     out.write(input + "\n");
                     out.flush();
                 }
