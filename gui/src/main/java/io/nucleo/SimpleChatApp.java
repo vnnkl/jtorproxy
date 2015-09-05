@@ -1,28 +1,22 @@
 package io.nucleo;
 
-import io.nucleo.net.TorProxy;
+import io.nucleo.net.tor.SetupTorManager;
 import io.nucleo.util.Tuple3;
-import java.io.File;
+
 import java.nio.file.Paths;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +33,8 @@ public class SimpleChatApp extends Application {
     private final StringProperty statusLeft = new SimpleStringProperty();
     private final StringProperty statusRight = new SimpleStringProperty();
 
-    private TorProxy torProxy1;
-    private TorProxy torProxy2;
+    private SetupTorManager setupTorManager1;
+    private SetupTorManager setupTorManager2;
     private boolean shuttingDown;
     private boolean isTorProxy1SetupHiddenServiceCompleted, isTorProxy2SetupHiddenServiceCompleted;
     private TextArea leftTextArea, rightTextArea;
@@ -125,11 +119,11 @@ public class SimpleChatApp extends Application {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onLeftSideSendData(String text) {
-        torProxy1.sendData(text, torProxy2.getOnionAddress());
+       // setupTorManager1.sendData(text, setupTorManager2.getOnionAddress());
     }
 
     private void onRightSideSendData(String text) {
-        torProxy2.sendData(text, torProxy1.getOnionAddress());
+       // setupTorManager2.sendData(text, setupTorManager1.getOnionAddress());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,19 +137,19 @@ public class SimpleChatApp extends Application {
         startTorButton.setDisable(true);
         stopTorButton.setDisable(false);
         String userDataDir = Paths.get(System.getProperty("user.home"), "Library", "Application Support", "SimpleChatApp").toString();
-        torProxy1 = new TorProxy(torProxy1LocalPort, new File(userDataDir, "torProxy1"));
-        torProxy1.addStartupCompletedListener(() -> {
+     /*   setupTorManager1 = new SetupTorManager(torProxy1LocalPort, new File(userDataDir, "torProxy1"));
+        setupTorManager1.addStartupCompletedListener(() -> {
             Platform.runLater(SimpleChatApp.this::torProxy1StartupCompleted);
             return null;
         });
-        torProxy1.startTor();
+        setupTorManager1.start();
 
-        torProxy2 = new TorProxy(torProxy2LocalPort, new File(userDataDir, "torProxy2"));
-        torProxy2.addStartupCompletedListener(() -> {
+        setupTorManager2 = new SetupTorManager(torProxy2LocalPort, new File(userDataDir, "torProxy2"));
+        setupTorManager2.addStartupCompletedListener(() -> {
             Platform.runLater(SimpleChatApp.this::torProxy2StartupCompleted);
             return null;
         });
-        torProxy2.startTor();
+        setupTorManager2.start();*/
     }
 
     private void shutDown() {
@@ -164,19 +158,19 @@ public class SimpleChatApp extends Application {
             Platform.runLater(() -> {
                 statusLeft.set("Shut down");
                 statusLeft.set("Shut down");
-                torProxy1.shutDown();
-                torProxy2.shutDown();
+                setupTorManager1.shutDown();
+                setupTorManager2.shutDown();
                 startTorButton.setDisable(false);
                 stopTorButton.setDisable(true);
             });
         }
     }
 
-    private void torProxy1StartupCompleted() {
+   /* private void torProxy1StartupCompleted() {
         log.debug("torProxy1StartupCompleted");
         statusLeft.set("Start up hidden service");
         try {
-            torProxy1.setupHiddenService(torProxy1HiddenServicePort, () -> {
+            setupTorManager1.setupHiddenService(torProxy1HiddenServicePort, () -> {
                 Platform.runLater(this::torProxy1SetupHiddenServiceCompleted);
                 return null;
             });
@@ -189,7 +183,7 @@ public class SimpleChatApp extends Application {
         log.debug("torProxy2StartupCompleted");
         statusRight.set("Start up hidden service");
         try {
-            torProxy2.setupHiddenService(torProxy2HiddenServicePort, () -> {
+            setupTorManager2.setupHiddenService(torProxy2HiddenServicePort, () -> {
                 Platform.runLater(this::torProxy2SetupHiddenServiceCompleted);
                 return null;
             });
@@ -197,13 +191,13 @@ public class SimpleChatApp extends Application {
             e.printStackTrace();
         }
 
-        torProxy1.sendData("test from torProxy1", torProxy2.getOnionAddress());
+        setupTorManager1.sendData("test from torProxy1", setupTorManager2.getOnionAddress());
     }
 
     private void torProxy1SetupHiddenServiceCompleted() {
         log.debug("torProxy1SetupHiddenServiceCompleted");
         statusLeft.set("Hidden service completed");
-        torProxy1.addReceivingDataListener(data -> Platform.runLater(() -> {
+        setupTorManager1.addReceivingDataListener(data -> Platform.runLater(() -> {
             leftTextArea.appendText(data + "\n");
             log.debug("torProxy1 received Data: " + data);
         }));
@@ -214,7 +208,7 @@ public class SimpleChatApp extends Application {
     private void torProxy2SetupHiddenServiceCompleted() {
         log.debug("torProxy2SetupHiddenServiceCompleted");
         statusRight.set("Hidden service completed");
-        torProxy2.addReceivingDataListener(data -> Platform.runLater(() -> {
+        setupTorManager2.addReceivingDataListener(data -> Platform.runLater(() -> {
             rightTextArea.appendText(data + "\n");
             log.debug("torProxy2 received Data: " + data);
         }));
@@ -228,7 +222,7 @@ public class SimpleChatApp extends Application {
             statusLeft.set("Setup client socket to peers hidden service");
             statusRight.set("Setup client socket to peers hidden service");
             try {
-                torProxy1.setupClientSocket(torProxy2.getOnionAddress(), torProxy2HiddenServicePort, () -> {
+                setupTorManager1.setupClientSocket(setupTorManager2.getOnionAddress(), torProxy2HiddenServicePort, () -> {
                     Platform.runLater(SimpleChatApp.this::torProxy1SetupClientSocketCompleted);
                     return null;
                 });
@@ -236,7 +230,7 @@ public class SimpleChatApp extends Application {
                 e.printStackTrace();
             }
             try {
-                torProxy2.setupClientSocket(torProxy1.getOnionAddress(), torProxy1HiddenServicePort, () -> {
+                setupTorManager2.setupClientSocket(setupTorManager1.getOnionAddress(), torProxy1HiddenServicePort, () -> {
                     Platform.runLater(SimpleChatApp.this::torProxy2SetupClientSocketCompleted);
                     return null;
                 });
@@ -250,15 +244,15 @@ public class SimpleChatApp extends Application {
         log.debug("torProxy1SetupClientSocketCompleted");
         statusLeft.set("Client socket to peers hidden service completed");
         leftChatInited.set(true);
-        torProxy1.sendData("test data from torProxy1 to torProxy2", torProxy2.getOnionAddress());
+        setupTorManager1.sendData("test data from torProxy1 to torProxy2", setupTorManager2.getOnionAddress());
     }
 
     private void torProxy2SetupClientSocketCompleted() {
         log.debug("torProxy2SetupClientSocketCompleted");
         statusRight.set("Client socket to peers hidden service completed");
         rightChatInited.set(true);
-        torProxy2.sendData("test data from torProxy2 to torProxy1", torProxy1.getOnionAddress());
-    }
+        setupTorManager2.sendData("test data from torProxy2 to torProxy1", setupTorManager1.getOnionAddress());
+    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

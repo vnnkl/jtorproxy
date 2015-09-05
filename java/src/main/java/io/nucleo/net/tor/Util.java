@@ -1,4 +1,4 @@
-package io.nucleo.net;
+package io.nucleo.net.tor;
 
 import java.io.File;
 import java.io.FileOutputStream;
