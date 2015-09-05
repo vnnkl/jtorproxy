@@ -2,10 +2,8 @@ package io.nucleo.net;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.net.Socket;
 import java.net.UnknownHostException;
-
 import java.util.GregorianCalendar;
 
 import org.slf4j.Logger;
@@ -15,6 +13,7 @@ import com.msopentech.thali.toronionproxy.OnionProxyContext;
 import com.msopentech.thali.toronionproxy.OnionProxyManager;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+
 import java.lang.reflect.ParameterizedType;
 
 public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyContext> {
@@ -31,10 +30,17 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     private final Socks5Proxy proxy;
 
     @SuppressWarnings("unchecked")
-    public TorNode(File torDirectory) throws IOException {
-        Class<M> mgr = (Class<M>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        Class<C> ctx = (Class<C>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
-        log.debug("Running Tornode with " +mgr.getSimpleName()+" and  "+ctx.getSimpleName());
+    public TorNode(File torDirectory) throws IOException, InstantiationException {
+        Class<M> mgr;
+        Class<C> ctx;
+        try {
+            mgr = (Class<M>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+            ctx = (Class<C>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
+        } catch (Throwable t) {
+            throw new InstantiationException(
+                    "Could not reify Types of OnionProxyManager and OnionProxyContext! Is this class being used with raw types?");
+        }
+        log.debug("Running Tornode with " + mgr.getSimpleName() + " and  " + ctx.getSimpleName());
         tor = initTor(torDirectory, mgr, ctx);
         int proxyPort = tor.getIPv4LocalHostSocksPort();
         log.info("TorSocks running on port " + proxyPort);

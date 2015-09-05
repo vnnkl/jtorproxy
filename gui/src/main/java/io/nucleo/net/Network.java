@@ -56,7 +56,7 @@ public class Network {
 
                 status.set("Server setup");
                 netWorkReady.set(true);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();

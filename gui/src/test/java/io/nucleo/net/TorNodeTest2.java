@@ -25,7 +25,7 @@ public class TorNodeTest2 {
     private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
     private static boolean stopped;
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, InstantiationException {
         File dir = new File("tor-test");
         dir.mkdirs();
         log.debug("Starting up tor");
