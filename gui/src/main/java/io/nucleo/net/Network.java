@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
-import oi.nucleo.net.HiddenServiceDescriptor;
-import oi.nucleo.net.TorNode;
 
 public class Network {
     private static final Logger log = LoggerFactory.getLogger(Network.class);

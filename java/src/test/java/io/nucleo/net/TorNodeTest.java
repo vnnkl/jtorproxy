@@ -14,9 +14,6 @@ import java.util.concurrent.ExecutionException;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
-import oi.nucleo.net.HiddenServiceDescriptor;
-import oi.nucleo.net.TorNode;
-
 public class TorNodeTest {
 
     private static final int hsPort = 55555;
