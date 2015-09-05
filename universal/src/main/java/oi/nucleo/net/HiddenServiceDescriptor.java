@@ -28,7 +28,7 @@ public class HiddenServiceDescriptor {
         return localPort;
     }
 
-    public int getServicePort() {
+    public int getservicePort() {
         return servicePort;
     }
 

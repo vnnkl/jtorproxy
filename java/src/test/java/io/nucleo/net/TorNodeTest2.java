@@ -45,7 +45,7 @@ public class TorNodeTest2 {
         Thread.sleep(1000);
 
         log.debug("Connect to hidden service");
-        Socket socket = node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getServicePort());
+        Socket socket = node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getservicePort());
 
         log.debug("Setup client and send data");
         final Client client = new Client(socket);
