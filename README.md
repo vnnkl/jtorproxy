@@ -1,4 +1,4 @@
-Tor_Onion_Proxy_Library
+JTorProxy
 =======================
 Forked from [Thali Project](http://www.thaliproject.org/)'s [Tor_Onion_Proxy_Library](https://github.com/thaliproject/Tor_Onion_Proxy_Library).
 
