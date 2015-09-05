@@ -2,6 +2,7 @@ package io.nucleo.net;
 
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+import io.nucleo.storage.Storage;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
@@ -18,7 +19,7 @@ public class TorNetwork extends Network {
     }
 
     @Override
-    public void start(String id, int serverPort, Repo repo, ServerHandler serverHandler) {
+    public void start(String id, int serverPort, Storage storage, ProcessDataHandler processDataHandler) {
         new Thread(() -> {
             status.set("Status: Starting up tor");
             try {
@@ -27,11 +28,12 @@ public class TorNetwork extends Network {
 
                 status.set("Status: Create hidden service");
                 HiddenServiceDescriptor descriptor = torNode.createHiddenService(serverPort);
-                repo.add(descriptor.getFullAddress());
-                address.set(descriptor.getFullAddress());
+                String fullAddress = descriptor.getFullAddress();
+                storage.add("addresses", fullAddress);
+                address.set(fullAddress);
 
                 status.set("Status: Start server");
-                server = new Server(descriptor.getServerSocket(), serverHandler);
+                server = new Server(descriptor.getServerSocket(), processDataHandler);
                 server.start();
 
                 status.set("Server running");

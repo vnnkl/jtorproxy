@@ -3,6 +3,7 @@ package io.nucleo.net;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.nucleo.storage.Storage;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.Socket;
@@ -25,7 +26,10 @@ public abstract class Network {
     public Network() {
     }
 
-    abstract public void start(String id, int serverPort, Repo repo, ServerHandler serverHandler) throws IOException;
+    abstract public void start(String id,
+                               int serverPort,
+                               Storage storage,
+                               ProcessDataHandler processDataHandler) throws IOException;
 
     public void shutDown() {
         try {
@@ -54,7 +58,7 @@ public abstract class Network {
                 status.set("Status: Connect to " + address);
                 Socket socket = getSocket(address);
                 Client client = new Client(socket);
-                ListenableFuture<Serializable> future = client.sendAsyncAndCloseSocket(text);
+                ListenableFuture<Serializable> future = client.sendAsync(text);
                 Futures.addCallback(future, new FutureCallback<Serializable>() {
                     @Override
                     public void onSuccess(Serializable serializable) {

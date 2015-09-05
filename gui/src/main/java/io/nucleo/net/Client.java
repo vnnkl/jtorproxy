@@ -22,13 +22,46 @@ public class Client {
         executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
     }
 
-    public ListenableFuture<Serializable> sendAsyncAndCloseSocket(final Serializable data) {
+    public Serializable sendSync(final Serializable data) {
+        DataInputStream dataInputStream = null;
+        DataOutputStream dataOutputStream = null;
+        try {
+            // send data
+            log.debug("Send data: " + data);
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.write(SerializationUtils.serialize(data));
+            dataOutputStream.flush();
+
+            // await response
+            dataInputStream = new DataInputStream(socket.getInputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream(dataInputStream);
+            final Serializable response = (Serializable) objectInputStream.readObject();
+            log.debug("Received response: " + response);
+            return response;
+        } catch (EOFException e) {
+            e.printStackTrace();
+            log.debug("EOFException: " + String.valueOf(data));
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (dataOutputStream != null) dataOutputStream.close();
+                if (dataInputStream != null) dataInputStream.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public ListenableFuture<Serializable> sendAsync(final Serializable data) {
         return executorService.submit(() -> {
             DataInputStream dataInputStream = null;
             DataOutputStream dataOutputStream = null;
             try {
                 // send data
-                log.debug("Send data: " + data);
+                //log.debug("Send data: " + data);
                 dataOutputStream = new DataOutputStream(socket.getOutputStream());
                 dataOutputStream.write(SerializationUtils.serialize(data));
                 dataOutputStream.flush();
@@ -37,7 +70,7 @@ public class Client {
                 dataInputStream = new DataInputStream(socket.getInputStream());
                 ObjectInputStream objectInputStream = new ObjectInputStream(dataInputStream);
                 final Serializable response = (Serializable) objectInputStream.readObject();
-                log.debug("Received response: " + response);
+                //log.debug("Received response: " + response);
                 return response;
             } catch (EOFException e) {
                 e.printStackTrace();

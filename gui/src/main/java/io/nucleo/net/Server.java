@@ -13,7 +13,7 @@ public class Server extends Thread implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
     private final ServerSocket serverSocket;
-    private final ServerHandler serverHandler;
+    private final ProcessDataHandler processDataHandler;
     private final ExecutorService executorService;
 
     private boolean stopped;
@@ -22,10 +22,10 @@ public class Server extends Thread implements Closeable {
         this(serverSocket, null);
     }
 
-    public Server(ServerSocket serverSocket, ServerHandler serverHandler) {
+    public Server(ServerSocket serverSocket, ProcessDataHandler processDataHandler) {
         super("Server");
         this.serverSocket = serverSocket;
-        this.serverHandler = serverHandler;
+        this.processDataHandler = processDataHandler;
         executorService = Executors.newCachedThreadPool();
     }
 
@@ -55,9 +55,9 @@ public class Server extends Thread implements Closeable {
 
                         log.debug("received data: " + receivedData);
 
-                        if (serverHandler != null) {
+                        if (processDataHandler != null) {
                             // process received data
-                            Serializable responseData = serverHandler.process(receivedData);
+                            Serializable responseData = processDataHandler.process(receivedData);
                             log.debug("send response: " + responseData);
 
                             // send response data

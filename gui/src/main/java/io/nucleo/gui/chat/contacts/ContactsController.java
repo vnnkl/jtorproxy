@@ -1,6 +1,7 @@
 package io.nucleo.gui.chat.contacts;
 
-import io.nucleo.net.Repo;
+import io.nucleo.storage.Storage;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Consumer;
@@ -25,7 +26,8 @@ public class ContactsController implements Initializable {
     private final List<String> remoteList = new ArrayList<>();
 
     private boolean shuttingDown;
-    private Repo repo;
+    private Storage storage;
+    private String ownAddress;
 
     public ContactsController() {
     }
@@ -52,7 +54,12 @@ public class ContactsController implements Initializable {
             public void run() {
                 Platform.runLater(() -> {
                     remoteList.clear();
-                    repo.getAddresses().stream().forEach(e -> remoteList.add(e));
+                    Serializable result = storage.get("addresses");
+                    if (result instanceof Set) {
+                        Set<String> set = (Set<String>) result;
+                        set.stream().filter(e -> !e.equals(ownAddress)).forEach(e -> remoteList.add(e));
+                    }
+
                     remoteList.sort((o1, o2) -> o1.compareTo(o2));
 
                     if (!addresses.equals(remoteList)) addresses.setAll(remoteList);
@@ -61,8 +68,8 @@ public class ContactsController implements Initializable {
         }, 0, interval);
     }
 
-    public void init(Stage stage, Repo repo, Consumer<String> selectionHandler) {
-        this.repo = repo;
+    public void init(Stage stage, Storage storage, Consumer<String> selectionHandler) {
+        this.storage = storage;
         stage.setOnCloseRequest(e -> shutDown());
 
         listView.setItems(addresses);
@@ -74,5 +81,9 @@ public class ContactsController implements Initializable {
         });
 
         poll();
+    }
+
+    public void setOwnAddress(String ownAddress) {
+        this.ownAddress = ownAddress;
     }
 }

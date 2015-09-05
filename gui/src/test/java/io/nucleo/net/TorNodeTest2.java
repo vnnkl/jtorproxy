@@ -3,20 +3,15 @@ package io.nucleo.net;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-
 import java.net.Socket;
-
 import java.util.concurrent.ExecutionException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
 public class TorNodeTest2 {
     private static final Logger log = LoggerFactory.getLogger(TorNodeTest2.class);
@@ -36,8 +31,8 @@ public class TorNodeTest2 {
         final HiddenServiceDescriptor hiddenService = node.createHiddenService(hsPort);
 
         log.debug("Setup server");
-        ServerHandler serverHandler = new ServerHandler();
-        final Server server = new Server(hiddenService.getServerSocket(), serverHandler);
+        ProcessDataHandler processDataHandler = new ProcessDataHandler();
+        final Server server = new Server(hiddenService.getServerSocket(), processDataHandler);
         server.start();
 
         Thread.sleep(1000);
@@ -47,7 +42,7 @@ public class TorNodeTest2 {
 
         log.debug("Setup client and send data");
         final Client client = new Client(socket);
-        ListenableFuture<Serializable> future = client.sendAsyncAndCloseSocket("test 1");
+        ListenableFuture<Serializable> future = client.sendAsync("test 1");
         Futures.addCallback(future, new FutureCallback<Serializable>() {
             @Override
             public void onSuccess(Serializable serializable) {

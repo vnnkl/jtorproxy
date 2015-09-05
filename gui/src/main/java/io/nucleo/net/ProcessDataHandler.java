@@ -1,29 +1,27 @@
 package io.nucleo.net;
 
 import java.io.Serializable;
-
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ServerHandler {
-    private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
+public class ProcessDataHandler {
+    private static final Logger log = LoggerFactory.getLogger(ProcessDataHandler.class);
 
     private final ExecutorService executorService;
     private final Function<Serializable, Serializable> processor;
 
-    public ServerHandler(Function<Serializable, Serializable> processor) {
+    public ProcessDataHandler(Function<Serializable, Serializable> processor) {
         this.processor = processor;
         executorService = Executors.newCachedThreadPool();
     }
 
-    public ServerHandler() {
+    public ProcessDataHandler() {
         this(null);
     }
 
@@ -42,9 +40,7 @@ public class ServerHandler {
     }
 
     private Serializable processData(Serializable data) {
-        if (processor != null)
-            return processor.apply(data);
-        else
-            return null;
+        if (processor != null) return processor.apply(data);
+        else return null;
     }
 }

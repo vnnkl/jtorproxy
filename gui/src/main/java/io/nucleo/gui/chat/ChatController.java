@@ -2,8 +2,8 @@ package io.nucleo.gui.chat;
 
 import io.nucleo.gui.chat.contacts.ContactsController;
 import io.nucleo.net.Network;
-import io.nucleo.net.Repo;
-import io.nucleo.net.ServerHandler;
+import io.nucleo.net.ProcessDataHandler;
+import io.nucleo.storage.Storage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -43,7 +43,7 @@ public class ChatController implements Initializable {
     private final BooleanProperty netWorkReady = new SimpleBooleanProperty();
     private final StringProperty status = new SimpleStringProperty();
     private boolean shuttingDown;
-    private ServerHandler serverHandler;
+    private ProcessDataHandler processDataHandler;
     private ContactsController contactsController;
 
     public ChatController() {
@@ -91,31 +91,34 @@ public class ChatController implements Initializable {
             }));
     }
 
-    public void init(Network network, Stage stage, String id, int serverPort, Repo repo) throws IOException {
+    public void init(Network network, Stage stage, String id, int serverPort, Storage storage) throws IOException {
         this.network = network;
-        
-        contactsController.init(stage, repo, this::connectToPeer);
+
+        contactsController.init(stage, storage, this::connectToPeer);
 
         stage.setOnCloseRequest(e -> shutDown());
-        
+
         network.statusProperty().addListener((observable, oldValue, newValue) -> {
             Platform.runLater(() -> status.set(newValue));
         });
         network.addressProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> addressTextField.setText(newValue));
+            Platform.runLater(() -> {
+                addressTextField.setText(newValue);
+                contactsController.setOwnAddress(newValue);
+            });
         });
         network.netWorkReadyProperty().addListener((observable, oldValue, newValue) -> {
             Platform.runLater(() -> netWorkReady.set(true));
         });
 
-        serverHandler = new ServerHandler(serializable -> {
+        processDataHandler = new ProcessDataHandler(serializable -> {
             Platform.runLater(() -> {
                 if (serializable instanceof String) textArea.appendText(serializable + "\n");
             });
             return null;
         });
-        
-        network.start(id, serverPort, repo, serverHandler);
+
+        network.start(id, serverPort, storage, processDataHandler);
     }
 
     public void connectToPeer(String peerAddress) {

@@ -2,6 +2,7 @@ package io.nucleo.net;
 
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+import io.nucleo.storage.Storage;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,15 +20,18 @@ public class LocalHostNetwork extends Network {
     }
 
     @Override
-    public void start(String id, int serverPort, Repo repo, ServerHandler serverHandler) throws IOException {
+    public void start(String id,
+                      int serverPort,
+                      Storage storage,
+                      ProcessDataHandler processDataHandler) throws IOException {
         new Thread(() -> {
             try {
                 status.set("Status: Start server");
                 String address = "localhost:" + serverPort;
-                repo.add(address);
+                storage.add("addresses", address);
                 this.address.set(address);
                 serverSocket = new ServerSocket(serverPort);
-                server = new Server(serverSocket, serverHandler);
+                server = new Server(serverSocket, processDataHandler);
                 server.start();
                 status.set("Server running");
                 netWorkReady.set(true);
