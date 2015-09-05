@@ -5,19 +5,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+
 import java.net.ServerSocket;
 import java.net.Socket;
+
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
-import org.omg.Messaging.SyncScopeHelper;
-
-import oi.nucleo.net.HiddenServiceDescriptor;
-import oi.nucleo.net.TorNode;
-
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+import oi.nucleo.net.HiddenServiceDescriptor;
+import oi.nucleo.net.TorNode;
 
 public class TorNodeTest {
 
@@ -37,7 +36,7 @@ public class TorNodeTest {
         serverLatch.await();
 
         if (args.length != 2)
-            new Client(node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getservicePort())).run();
+            new Client(node.connectToHiddenService(hiddenService.getOnionUrl(), hiddenService.getServicePort())).run();
         else {
             System.out.println("\nHs Running, pres return to connect to " + args[0] + ":" + args[1]);
             final Scanner scanner = new Scanner(System.in);

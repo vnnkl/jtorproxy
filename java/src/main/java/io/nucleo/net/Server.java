@@ -1,14 +1,24 @@
 package io.nucleo.net;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 import java.net.ServerSocket;
 import java.net.Socket;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.commons.lang3.SerializationUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.lang3.SerializationUtils;
 
 public class Server extends Thread implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
@@ -33,6 +43,7 @@ public class Server extends Thread implements Closeable {
     @Override
     public void close() throws IOException {
         stopped = true;
+        serverSocket.close();
         executorService.shutdown();
     }
 

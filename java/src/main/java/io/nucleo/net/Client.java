@@ -3,15 +3,25 @@ package io.nucleo.net;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.*;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+
 import java.net.Socket;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import org.apache.commons.lang3.SerializationUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Client implements Closeable {
+import org.apache.commons.lang3.SerializationUtils;
+
+public class Client {
     private static final Logger log = LoggerFactory.getLogger(Client.class);
 
     private final ListeningExecutorService executorService;
@@ -21,11 +31,6 @@ public class Client implements Closeable {
     public Client(Socket socket) {
         this.socket = socket;
         executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
-    }
-
-    @Override
-    public void close() throws IOException {
-        executorService.shutdown();
     }
 
     public ListenableFuture<Serializable> sendAsyncAndCloseSocket(final Serializable data) {

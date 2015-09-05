@@ -1,6 +1,7 @@
 package oi.nucleo.net;
 
 import java.io.IOException;
+
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
@@ -12,9 +13,9 @@ public class HiddenServiceDescriptor {
     private final ServerSocket serverSocket;
 
     public HiddenServiceDescriptor(String onionUrl, int localPort, int servicePort) throws IOException {
-        this.onionUrl=onionUrl;
-        this.localPort=localPort;
-        this.servicePort=servicePort;
+        this.onionUrl = onionUrl;
+        this.localPort = localPort;
+        this.servicePort = servicePort;
         this.serverSocket = new ServerSocket();
         this.serverSocket.bind(new InetSocketAddress(localPort));
     }
@@ -27,11 +28,15 @@ public class HiddenServiceDescriptor {
         return localPort;
     }
 
-    public int getservicePort() {
+    public int getServicePort() {
         return servicePort;
     }
-    
-    public ServerSocket getServerSocket(){
+
+    public String getFullAddress() {
+        return onionUrl + ":" + servicePort;
+    }
+
+    public ServerSocket getServerSocket() {
         return serverSocket;
     }
 }
