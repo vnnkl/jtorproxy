@@ -5,13 +5,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-
 import java.net.ServerSocket;
 import java.net.Socket;
-
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
 import oi.nucleo.net.HiddenServiceDescriptor;
 import oi.nucleo.net.TorNode;
@@ -21,14 +22,14 @@ public class TorNodeTest {
     private static final int hsPort = 55555;
     private static CountDownLatch serverLatch = new CountDownLatch(1);
     @SuppressWarnings("rawtypes")
-    private static TorNode node;
+    private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         File dir = new File("tor-test");
         dir.mkdirs();
         for (String str : args)
             System.out.print(str + " ");
-        node = new JTorNode(dir); 
+        node = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(dir){}; 
         final HiddenServiceDescriptor hiddenService = node.createHiddenService(hsPort);
         new Thread(new Server(hiddenService.getServerSocket())).start();
         serverLatch.await();

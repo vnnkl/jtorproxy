@@ -1,14 +1,25 @@
 Tor_Onion_Proxy_Library
 =======================
+Forked from [Thali Project](http://www.thaliproject.org/)'s [Tor_Onion_Proxy_Library](https://github.com/thaliproject/Tor_Onion_Proxy_Library).
+
+Includes fixes, an easy-to-use high-level abstraction and a GUI module, showcasing the code.
+Even though the GUI requires Java 8, the library itself (the modules *universal* and *java*) require only Java 7.
+A simple test program is present in the sources of the *java* module, illustrating the use of the high-level API.
+
+(Original readme follows.)
+
+README
+======
+
 NOTE: This project exists independently of the Tor Project.
 
 __What__: Enable Android and Java applications to easily host their own Tor Onion Proxies using the core Tor binaries. Just by including an AAR or JAR an app can launch and manage the Tor OP as well as start a hidden service.
 
 __Why__: It's sort of a pain to deploy and manage the Tor OP, we want to make it much easier.
 
-__How__: We are really just a thin Java wrapper around the Tor OP binaries and jtorctl. 
+__How__: We are really just a thin Java wrapper around the Tor OP binaries and jtorctl.
 
-__Who__: This work is part of the [Thali Project](http://www.thaliproject.org/mediawiki/index.php?title=Main_Page) and is being actively developed by Yaron Y. Goland assigned to the Microsoft Open Technologies Hub. We absolutely need your help! Please see the FAQ below if you would like to help!
+__Who__: This work is part of the [Thali Project](http://www.thaliproject.org/) and is being actively developed by Yaron Y. Goland assigned to the Microsoft Open Technologies Hub. We absolutely need your help! Please see the FAQ below if you would like to help!
 
 # How do I use this library?
 For now you get to build this yourself. Eventually, when it has enough testing, I might consider publishing it to some maven repository.
@@ -96,7 +107,7 @@ compile 'org.slf4j:slf4j-simple:1.7.7'
 ```
 
 As discussed above, the code in this library is pretty trivial. But using it is hard because of the complexities of Tor and Java. For those in Java land please go to java\src\test\java\com\msopentech\thali\toronionproxy\TorOnionProxySmokeTest and check out testHiddenServiceRecycleTime().
- 
+
 But here is some sample code to get you started.
 
 ```Java
@@ -133,7 +144,7 @@ Socket clientSocket =
 
 // Now the socket is open but note that it can take some time before the Tor network has everything
 // connected and connection requests can fail for spurious reasons (especially when connecting to
-// hidden services) so have lots of retry logic.        
+// hidden services) so have lots of retry logic.
 ```
 
 # Acknowledgements
@@ -145,7 +156,7 @@ And of course an endless amount of gratitude to the heroes of the Tor project fo
 
 # FAQ
 ## What's the relationship between universal, Java and android projects?
-The universal project produces a JAR that contains code that is common to both the Java and Android versions of the project. We need this JAR available separately because we use this code to build other projects that also share code between Java and Android. So universal is very useful because we can include universal into our project's 'common' code project without getting into any Java or Android specific details. 
+The universal project produces a JAR that contains code that is common to both the Java and Android versions of the project. We need this JAR available separately because we use this code to build other projects that also share code between Java and Android. So universal is very useful because we can include universal into our project's 'common' code project without getting into any Java or Android specific details.
 
 On top of universal are the java and android projects. They contain code specific to those platforms along with collateral like binaries.
 
@@ -157,10 +168,10 @@ One further complication are tests. Hard experience has taught that putting test
 Well the release version is currently 0.0.2 so that should say something. This is an alpha. We have (literally) one test. Obviously we need a heck of a lot more coverage. But we have run that test and it does actually work which means that the Tor OP is being run and is available.
 
 ## Can I run multiple programs next to each other that use this library?
-Yes, they won't interfere with each other. We use dynamic ports for both the control and socks channel. 
+Yes, they won't interfere with each other. We use dynamic ports for both the control and socks channel.
 
 ## Can I help with the project?
-ABSOLUTELY! You will need to sign a [Contributor License Agreement](https://cla.msopentech.com/) before submitting your pull request. To complete the Contributor License Agreement (CLA), you will need to submit a request via the form and then electronically sign the Contributor License Agreement when you receive the email containing the link to the document. This needs to only be done once for any Microsoft Open Technologies OSS project. 
+ABSOLUTELY! You will need to sign a [Contributor License Agreement](https://cla.msopentech.com/) before submitting your pull request. To complete the Contributor License Agreement (CLA), you will need to submit a request via the form and then electronically sign the Contributor License Agreement when you receive the email containing the link to the document. This needs to only be done once for any Microsoft Open Technologies OSS project.
 
 Please make sure to configure git with a username and email address to use for your commits. Your username should be your GitHub username, so that people will be able to relate your commits to you. From a command prompt, run the following commands:
 ```
