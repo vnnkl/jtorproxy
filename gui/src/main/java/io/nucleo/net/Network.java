@@ -3,34 +3,21 @@ package io.nucleo.net;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-
 import java.net.Socket;
-
 import java.util.function.Consumer;
-
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
+import javafx.beans.property.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
 public class Network {
     private static final Logger log = LoggerFactory.getLogger(Network.class);
 
     private final StringProperty status = new SimpleStringProperty();
-
-
     private final BooleanProperty netWorkReady = new SimpleBooleanProperty();
 
     private final ObjectProperty<HiddenServiceDescriptor> hiddenServiceDescriptor = new SimpleObjectProperty<>();
@@ -41,8 +28,7 @@ public class Network {
         new Thread(() -> {
             status.set("Status: Starting up tor");
             try {
-                node = new TorNode<JavaOnionProxyManager,
-                        JavaOnionProxyContext>(new File(id)) {
+                node = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(new File(id)) {
                 };
 
                 status.set("Status: Create hidden service");
@@ -89,10 +75,9 @@ public class Network {
     public void send(Serializable text, String address, Consumer<Serializable> responseHandler) {
         new Thread(() -> {
             try {
-                status.set("Status: Setup connection to " + address);
+                status.set("Status: Connect to " + address);
                 Socket socket = getSocket(address);
                 Client client = new Client(socket);
-                status.set("Status: Connection to " + address + " setup");
                 ListenableFuture<Serializable> future = client.sendAsyncAndCloseSocket(text);
                 Futures.addCallback(future, new FutureCallback<Serializable>() {
                     @Override
