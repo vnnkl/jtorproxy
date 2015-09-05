@@ -1,7 +1,8 @@
-package io.nucleo.net.app;
+package io.nucleo.gui.app;
 
+import io.nucleo.gui.chat.ChatController;
 import io.nucleo.net.Repo;
-import io.nucleo.net.chat.ChatController;
+import io.nucleo.net.TorNetwork;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -25,10 +26,8 @@ public class Chat extends Application {
     // optional args: id port
 
     public static void main(String[] args) {
-        if (args.length > 0)
-            id = args[0];
-        if (args.length > 1)
-            port = Integer.parseInt(args[1]);
+        if (args.length > 0) id = args[0];
+        if (args.length > 1) port = Integer.parseInt(args[1]);
 
         launch(args);
     }
@@ -37,10 +36,10 @@ public class Chat extends Application {
     public void start(Stage primaryStage) throws IOException, InterruptedException {
         Repo repo = new Repo();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/chat/ChatView.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/gui/chat/ChatView.fxml"));
         Pane chatView = loader.load();
         ChatController chatController = loader.getController();
-        chatController.init(primaryStage, id, port, repo);
+        chatController.init(new TorNetwork(), primaryStage, id, port, repo);
 
         Scene scene = new Scene(chatView, 900, 800);
         primaryStage.setScene(scene);

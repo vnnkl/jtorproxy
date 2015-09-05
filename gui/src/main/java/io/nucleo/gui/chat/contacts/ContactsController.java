@@ -1,4 +1,4 @@
-package io.nucleo.net.chat.contacts;
+package io.nucleo.gui.chat.contacts;
 
 import io.nucleo.net.Repo;
 import java.net.URL;

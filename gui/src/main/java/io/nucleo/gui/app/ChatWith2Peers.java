@@ -1,7 +1,10 @@
-package io.nucleo.net.app;
+package io.nucleo.gui.app;
 
+import io.nucleo.gui.chat.ChatController;
+import io.nucleo.net.LocalHostNetwork;
+import io.nucleo.net.Network;
 import io.nucleo.net.Repo;
-import io.nucleo.net.chat.ChatController;
+import io.nucleo.net.TorNetwork;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -37,17 +40,20 @@ public class ChatWith2Peers extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException, InterruptedException {
+        boolean useTor = false;
         Repo repo = new Repo();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/chat/ChatView.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/gui/chat/ChatView.fxml"));
         Pane leftChatView = loader.load();
         ChatController leftChatController = loader.getController();
-        leftChatController.init(primaryStage, idLeft, portLeft, repo);
+        Network network = useTor ? new TorNetwork() : new LocalHostNetwork();
+        leftChatController.init(network, primaryStage, idLeft, portLeft, repo);
 
-        loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/chat/ChatView.fxml"));
+        loader = new FXMLLoader(getClass().getResource("/io/nucleo/gui/chat/ChatView.fxml"));
         Pane rightChatView = loader.load();
         ChatController rightChatController = loader.getController();
-        rightChatController.init(primaryStage, idRight, portRight, repo);
+        network = useTor ? new TorNetwork() : new LocalHostNetwork();
+        rightChatController.init(network, primaryStage, idRight, portRight, repo);
 
         HBox chatPane = new HBox();
         chatPane.setSpacing(10);

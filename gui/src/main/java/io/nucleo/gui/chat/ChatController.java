@@ -1,9 +1,9 @@
-package io.nucleo.net.chat;
+package io.nucleo.gui.chat;
 
+import io.nucleo.gui.chat.contacts.ContactsController;
 import io.nucleo.net.Network;
 import io.nucleo.net.Repo;
 import io.nucleo.net.ServerHandler;
-import io.nucleo.net.chat.contacts.ContactsController;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -24,7 +24,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ import org.slf4j.LoggerFactory;
 public class ChatController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(ChatController.class);
     public HBox root;
-    public VBox contactsView;
     private Network network;
     private String peerAddress;
 
@@ -54,7 +52,7 @@ public class ChatController implements Initializable {
     @Override
     public void initialize(URL fxmlFileLocation, ResourceBundle resources) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/chat/contacts/ContactsView" + "" +
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/gui/chat/contacts/ContactsView" + "" +
                                                                               ".fxml"));
             Pane contactsView = loader.load();
             contactsController = loader.getController();
@@ -93,39 +91,38 @@ public class ChatController implements Initializable {
             }));
     }
 
-    public void init(Stage stage, String id, int hiddenServicePort, Repo repo) throws IOException {
+    public void init(Network network, Stage stage, String id, int serverPort, Repo repo) throws IOException {
+        this.network = network;
+        
         contactsController.init(stage, repo, this::connectToPeer);
 
         stage.setOnCloseRequest(e -> shutDown());
+        
+        network.statusProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> status.set(newValue));
+        });
+        network.addressProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> addressTextField.setText(newValue));
+        });
+        network.netWorkReadyProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> netWorkReady.set(true));
+        });
+
         serverHandler = new ServerHandler(serializable -> {
             Platform.runLater(() -> {
                 if (serializable instanceof String) textArea.appendText(serializable + "\n");
             });
             return null;
         });
-
-        network = new Network(id, hiddenServicePort, repo, serverHandler);
-        network.statusProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> status.set(newValue));
-        });
-        network.hiddenServiceDescriptorProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> addressTextField.setText(newValue.getOnionUrl() + ":" +
-                                                                     newValue.getServicePort()));
-        });
-        network.netWorkReadyProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> netWorkReady.set(true));
-        });
+        
+        network.start(id, serverPort, repo, serverHandler);
     }
 
     public void connectToPeer(String peerAddress) {
         if (peerAddress != null) {
             this.peerAddress = peerAddress;
-            log.debug("peerAddress " + peerAddress);
-            log.debug("hiddenServiceDescriptorProperty " + network.hiddenServiceDescriptorProperty().get());
-            if (network.hiddenServiceDescriptorProperty().get() != null)
-                isPeerAddressAvailable.set(!peerAddress.equals(network.hiddenServiceDescriptorProperty()
-                                                                      .get()
-                                                                      .getFullAddress()));
+            if (network.addressProperty().get() != null)
+                isPeerAddressAvailable.set(!peerAddress.equals(network.addressProperty().get()));
             network.connectToPeer(peerAddress);
         }
     }

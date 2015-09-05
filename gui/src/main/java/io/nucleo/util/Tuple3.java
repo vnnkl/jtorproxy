@@ -1,4 +1,4 @@
-package io.nucleo.net.util;
+package io.nucleo.util;
 
 public class Tuple3<A, B, C> {
     final public A first;
