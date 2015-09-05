@@ -2,9 +2,10 @@ package io.nucleo.net;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
+
 import java.net.Socket;
 import java.net.UnknownHostException;
+
 import java.util.GregorianCalendar;
 
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import com.msopentech.thali.toronionproxy.OnionProxyContext;
 import com.msopentech.thali.toronionproxy.OnionProxyManager;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+import java.lang.reflect.ParameterizedType;
 
 public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyContext> {
 

@@ -46,26 +46,25 @@ public class ChatWith2Peers extends Application {
     public void start(Stage primaryStage) throws IOException, InterruptedException {
         Repo repo = new Repo();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("../chat/ChatView.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/chat/ChatView.fxml"));
         Pane leftChatView = loader.load();
         ChatController leftChatController = loader.getController();
         leftChatController.init(primaryStage, idLeft, portLeft, repo);
 
-        loader = new FXMLLoader(getClass().getResource("../chat/ChatView.fxml"));
+        loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/chat/ChatView.fxml"));
         Pane rightChatView = loader.load();
         ChatController rightChatController = loader.getController();
         rightChatController.init(primaryStage, idRight, portRight, repo);
 
-        loader = new FXMLLoader(getClass().getResource("../contacts/ContactsView.fxml"));
+        loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/contacts/ContactsView.fxml"));
         Pane leftContactsView = loader.load();
         ContactsController leftContactsController = loader.getController();
         leftContactsController.init(primaryStage, repo, leftChatController::connectToPeer);
 
-        loader = new FXMLLoader(getClass().getResource("../contacts/ContactsView.fxml"));
+        loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/contacts/ContactsView.fxml"));
         Pane rightContactsView = loader.load();
         ContactsController rightContactsController = loader.getController();
         rightContactsController.init(primaryStage, repo, rightChatController::connectToPeer);
-
 
         HBox chatPane = new HBox();
         chatPane.setSpacing(10);

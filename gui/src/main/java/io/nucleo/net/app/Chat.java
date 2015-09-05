@@ -42,12 +42,12 @@ public class Chat extends Application {
     public void start(Stage primaryStage) throws IOException, InterruptedException {
         Repo repo = new Repo();
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("../chat/ChatView.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/chat/ChatView.fxml"));
         Pane chatView = loader.load();
         ChatController chatController = loader.getController();
         chatController.init(primaryStage, id, port, repo);
 
-        loader = new FXMLLoader(getClass().getResource("../contacts/ContactsView.fxml"));
+        loader = new FXMLLoader(getClass().getResource("/io/nucleo/net/contacts/ContactsView.fxml"));
         Pane contactsView = loader.load();
         ContactsController contactsController = loader.getController();
         contactsController.init(primaryStage, repo, chatController::connectToPeer);

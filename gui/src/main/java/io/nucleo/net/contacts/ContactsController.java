@@ -33,7 +33,6 @@ public class ContactsController implements Initializable {
     private Repo repo;
 
     public ContactsController() {
-        log.debug("dsaf");
     }
 
     @Override
