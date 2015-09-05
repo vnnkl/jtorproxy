@@ -38,50 +38,51 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Logs the data we get from notifications from the Tor OP. This is really just meant for debugging.
+ * Logs the data we get from notifications from the Tor OP. This is really just
+ * meant for debugging.
  */
 public class OnionProxyManagerEventHandler implements EventHandler {
-  private static final Logger LOG = LoggerFactory.getLogger(OnionProxyManagerEventHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OnionProxyManagerEventHandler.class);
 
-  @Override
-  public void circuitStatus(String status, String id, String path) {
-    String msg = "CircuitStatus: " + id + " " + status + ", " + path;
-    LOG.info(msg);
-  }
-
-  @Override
-  public void streamStatus(String status, String id, String target) {
-    LOG.info("streamStatus: status: " + status + ", id: " + id + ", target: " + target);
-  }
-
-  @Override
-  public void orConnStatus(String status, String orName) {
-    LOG.info("OR connection: status: " + status + ", orName: " + orName);
-  }
-
-  @Override
-  public void bandwidthUsed(long read, long written) {
-    LOG.info("bandwidthUsed: read: " + read + ", written: " + written);
-  }
-
-  @Override
-  public void newDescriptors(List<String> orList) {
-    Iterator<String> iterator = orList.iterator();
-    StringBuilder stringBuilder = new StringBuilder();
-    while (iterator.hasNext()) {
-      stringBuilder.append(iterator.next());
+    @Override
+    public void circuitStatus(String status, String id, String path) {
+        String msg = "CircuitStatus: " + id + " " + status + ", " + path;
+        LOG.info(msg);
     }
-    LOG.info("newDescriptors: " + stringBuilder.toString());
-  }
 
-  @Override
-  public void message(String severity, String msg) {
-    LOG.info("message: severity: " + severity + ", msg: " + msg);
-  }
+    @Override
+    public void streamStatus(String status, String id, String target) {
+        LOG.info("streamStatus: status: " + status + ", id: " + id + ", target: " + target);
+    }
 
-  @Override
-  public void unrecognized(String type, String msg) {
-    LOG.info("unrecognized: type: " + type + ", msg: " + msg);
-  }
+    @Override
+    public void orConnStatus(String status, String orName) {
+        LOG.info("OR connection: status: " + status + ", orName: " + orName);
+    }
+
+    @Override
+    public void bandwidthUsed(long read, long written) {
+        LOG.info("bandwidthUsed: read: " + read + ", written: " + written);
+    }
+
+    @Override
+    public void newDescriptors(List<String> orList) {
+        Iterator<String> iterator = orList.iterator();
+        StringBuilder stringBuilder = new StringBuilder();
+        while (iterator.hasNext()) {
+            stringBuilder.append(iterator.next());
+        }
+        LOG.info("newDescriptors: " + stringBuilder.toString());
+    }
+
+    @Override
+    public void message(String severity, String msg) {
+        LOG.info("message: severity: " + severity + ", msg: " + msg);
+    }
+
+    @Override
+    public void unrecognized(String type, String msg) {
+        LOG.info("unrecognized: type: " + type + ", msg: " + msg);
+    }
 
 }

@@ -45,12 +45,12 @@ public class OsData {
     }
 
     /**
-     * Yes, I should use a proper memoization abstract class but, um, next time.
      * @return Type of OS we are running on
      */
     protected static OsType actualGetOsType() {
 
-        if (System.getProperty("java.vm.name").contains("Dalvik")) {
+        //This also works for ART
+        if (System.getProperty("java.vm.name").contains("Dalvik")) { 
             return OsType.Android;
         }
 

@@ -119,11 +119,7 @@ abstract public class OnionProxyContext {
         switch (OsData.getOsType()) {
             case Linux32:
             case Linux64:
-                // We have to provide the LD_LIBRARY_PATH because when looking
-                // for dynamic libraries
-                // Linux apparently will not look in the current directory by
-                // default. By setting this
-                // environment variable we fix that.
+                // We have to provide the LD_LIBRARY_PATH
                 envArgs.add("LD_LIBRARY_PATH=" + getWorkingDirectory().getAbsolutePath());
             default:
                 break;
