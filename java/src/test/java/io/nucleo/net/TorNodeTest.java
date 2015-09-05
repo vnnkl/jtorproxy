@@ -18,10 +18,10 @@ public class TorNodeTest {
 
     private static final int hsPort = 55555;
     private static CountDownLatch serverLatch = new CountDownLatch(1);
-    @SuppressWarnings("rawtypes")
+    
     private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, InstantiationException {
         File dir = new File("tor-test");
         dir.mkdirs();
         for (String str : args)
