@@ -1,23 +1,17 @@
-package io.nucleo.net.contacts;
+package io.nucleo.net.chat.contacts;
 
 import io.nucleo.net.Repo;
-
 import java.net.URL;
-
-import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.function.Consumer;
-
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.ListView;
 import javafx.stage.Stage;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +22,7 @@ public class ContactsController implements Initializable {
     @FXML private ListView listView;
 
     private final ObservableList<String> addresses = FXCollections.observableArrayList();
+    private final List<String> remoteList = new ArrayList<>();
 
     private boolean shuttingDown;
     private Repo repo;
@@ -56,8 +51,11 @@ public class ContactsController implements Initializable {
             @Override
             public void run() {
                 Platform.runLater(() -> {
-                    addresses.clear();
-                    repo.getAddresses().stream().forEach(e -> addresses.add(e));
+                    remoteList.clear();
+                    repo.getAddresses().stream().forEach(e -> remoteList.add(e));
+                    remoteList.sort((o1, o2) -> o1.compareTo(o2));
+
+                    if (!addresses.equals(remoteList)) addresses.setAll(remoteList);
                 });
             }
         }, 0, interval);
