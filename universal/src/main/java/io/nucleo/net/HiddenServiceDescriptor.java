@@ -1,4 +1,4 @@
-package oi.nucleo.net;
+package io.nucleo.net;
 
 import java.io.IOException;
 

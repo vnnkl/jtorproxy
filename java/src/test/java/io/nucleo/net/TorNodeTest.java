@@ -13,9 +13,6 @@ import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
-import oi.nucleo.net.HiddenServiceDescriptor;
-import oi.nucleo.net.TorNode;
-
 public class TorNodeTest {
 
     private static final int hsPort = 55555;
