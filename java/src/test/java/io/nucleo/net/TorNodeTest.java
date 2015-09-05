@@ -14,6 +14,9 @@ import java.util.concurrent.ExecutionException;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
+import io.nucleo.net.HiddenServiceDescriptor;
+import io.nucleo.net.TorNode;
+
 public class TorNodeTest {
 
     private static final int hsPort = 55555;
@@ -97,7 +100,7 @@ public class TorNodeTest {
                 while (true) {
 
                     Socket sock = socket.accept();
-                    System.out.println("Accepting Client on port " + sock.getLocalPort());
+                    System.out.println("Accepting Client "+sock.getRemoteSocketAddress() +" on port " + sock.getLocalPort());
                     BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
                     OutputStreamWriter out = new OutputStreamWriter(sock.getOutputStream());
                     String aLine = null;

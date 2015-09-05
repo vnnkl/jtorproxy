@@ -69,11 +69,13 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
                 if (debug)
                     log.info("Took " + (GregorianCalendar.getInstance().getTimeInMillis() - before)
                             + " milliseconds to connect to " + onionUrl + ":" + port);
+                ssock.setTcpNoDelay(true);
                 return ssock;
             } catch (UnknownHostException exx) {
                 try {
                     if (debug)
-                        log.debug("Try " + (i + 1) + " connecting to " + onionUrl + ":" + port + " failed. retrying...");
+                        log.debug(
+                                "Try " + (i + 1) + " connecting to " + onionUrl + ":" + port + " failed. retrying...");
                     Thread.sleep(RETRY_SLEEP);
                     continue;
                 } catch (InterruptedException e) {
