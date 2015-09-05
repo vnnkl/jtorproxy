@@ -18,7 +18,7 @@ public class TorNetwork extends Network {
     }
 
     @Override
-    public void start(String id, int serverPort, Repo repo, ServerHandler serverHandler) throws IOException {
+    public void start(String id, int serverPort, Repo repo, ServerHandler serverHandler) {
         new Thread(() -> {
             status.set("Status: Starting up tor");
             try {
@@ -36,7 +36,7 @@ public class TorNetwork extends Network {
 
                 status.set("Server running");
                 netWorkReady.set(true);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }).start();

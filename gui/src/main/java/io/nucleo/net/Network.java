@@ -23,7 +23,6 @@ public abstract class Network {
     protected Server server;
 
     public Network() {
-        
     }
 
     abstract public void start(String id, int serverPort, Repo repo, ServerHandler serverHandler) throws IOException;
