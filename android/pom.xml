@@ -1,21 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+   <parent>
         <artifactId>parent</artifactId>
         <groupId>com.msopentech.thali</groupId>
         <version>0.0.3-SNAPSHOT</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-
     <artifactId>android</artifactId>
+  <packaging>aar</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.msopentech.thali</groupId>
-            <artifactId>universal</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-    </dependencies>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <platform.version> 4.1.1.4
+    </platform.version>
+    <android.plugin.version>4.0.0-rc.1</android.plugin.version>
+    <skytrust.version>1.0-SNAPSHOT</skytrust.version>
+    <json-schema-validator.version>2.2.5</json-schema-validator.version>
+  </properties>
+  <!-- <repositories> <repository> <id>project.local</id> <name>project</name> <url>file:${project.basedir}/repo</url> </repository>
+    </repositories> -->
+  <dependencies>
+    <dependency>
+      <groupId>com.msopentech.thali</groupId>
+      <artifactId>universal</artifactId>
+      <version>0.0.3-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.android</groupId>
+      <artifactId>android</artifactId>
+      <version>${platform.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <finalName>${project.artifactId}</finalName>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+          <artifactId>android-maven-plugin</artifactId>
+          <version>${android.plugin.version}</version>
+          <extensions>true</extensions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+        <configuration>
+          <androidManifestFile>AndroidManifest.xml</androidManifestFile>
+          <resourceDirectory>res</resourceDirectory>
+          <assetsDirectory>assets</assetsDirectory>
+          <argLine>-Xmx4096m</argLine>
+          <!-- <source>1.7</source> <target>1.7</target> -->
+          <sdk>
+            <platform>16</platform>
+          </sdk>
+          <extractDuplicates>true</extractDuplicates>
+          <dex>
+            <jvmArguments>
+              <jvmArgument>-Xms1024m</jvmArgument>
+              <jvmArgument>-Xmx4096m</jvmArgument>
+            </jvmArguments>
+          </dex>
+        </configuration>
+      </plugin>
+      <!-- <plugin> <artifactId>maven-compiler-plugin</artifactId> <configuration> <source>1.7</source> <target>1.7</target>
+        </configuration> </plugin> -->
+    </plugins>
+  </build>
 </project>
+
