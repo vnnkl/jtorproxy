@@ -27,7 +27,7 @@ public class ChatWith2Peers extends Application {
     private static boolean useTor = false;
     private static boolean useServerStorage = true;
 
-    // optional args: idLeft portLeft idRight portRight
+    // optional args: idLeft portLeft idRight portRight useTor useServerStorage
     public static void main(String[] args) {
         if (args.length > 0) idLeft = args[0];
         if (args.length > 1) portLeft = Integer.parseInt(args[1]);

@@ -24,7 +24,7 @@ public class Chat extends Application {
     private static boolean useServerStorage = true;
 
 
-    // optional args: id port
+    // optional args: id port useTor useServerStorage
     public static void main(String[] args) {
         if (args.length > 0) id = args[0];
         if (args.length > 1) port = Integer.parseInt(args[1]);
