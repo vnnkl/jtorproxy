@@ -57,6 +57,9 @@ public abstract class Connection implements Closeable {
     executorService = Executors.newCachedThreadPool();
   }
 
+  
+  public abstract boolean isIncoming();
+  
   public void addMessageListener(ConnectionListener listener) {
     synchronized (listeners) {
       listeners.add(listener);

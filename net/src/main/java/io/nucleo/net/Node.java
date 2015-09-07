@@ -284,6 +284,11 @@ public class Node {
       connections.remove(getPeer());
 
     }
+
+    @Override
+    public boolean isIncoming() {
+      return true;
+    }
   }
 
   private class OutgoingConnection extends Connection {
@@ -306,6 +311,11 @@ public class Node {
     @Override
     public void onDisconnect() {
       connections.remove(getPeer());
+    }
+
+    @Override
+    public boolean isIncoming() {
+      return false;
     }
 
   }
