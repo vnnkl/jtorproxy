@@ -14,8 +14,14 @@
   <dependencies>
     <dependency>
       <groupId>com.msopentech.thali</groupId>
+      <artifactId>universal</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.msopentech.thali</groupId>
       <artifactId>java</artifactId>
       <version>${project.parent.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
