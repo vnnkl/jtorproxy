@@ -2,59 +2,48 @@ package io.nucleo.storage;
 
 import io.nucleo.messages.Header;
 import io.nucleo.messages.Message;
-import io.nucleo.net.Client;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.Socket;
-import java.util.Set;
+import io.nucleo.net.Network;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StorageClient extends Storage {
+import java.io.Serializable;
+import java.util.function.Consumer;
+
+public class StorageClient {
     private static final Logger log = LoggerFactory.getLogger(StorageClient.class);
+    private final String id;
 
     private String address;
-    private Socket socket;
-    private Client client;
 
-    public StorageClient(String address) {
+    private Network network;
+
+    public StorageClient(String address, String id, Network network) {
         this.address = address;
+        this.id = id;
+        this.network = network;
     }
 
-    public Serializable put(String key, Serializable value) {
-        return send(new Message(new Header(Header.OP_PUT), key, value));
+    public void start() {
+        network.start("StorageClient_" + id);
     }
 
-    public Set<Serializable> add(String key, Serializable value) {
-        return (Set) send(new Message(new Header(Header.OP_ADD), key, value));
+    public void put(String key, Serializable value, Consumer<Serializable> responseHandler) {
+        send(new Message(new Header(Header.OP_PUT), key, value), responseHandler);
     }
 
-    public Serializable get(String key) {
-        return send(new Message(new Header(Header.OP_GET), key));
+    public void add(String key, Serializable value, Consumer<Serializable> responseHandler) {
+        send(new Message(new Header(Header.OP_ADD), key, value), responseHandler);
     }
 
-    protected Serializable send(Serializable data) {
-        try {
-            socket = getSocket(address);
-            client = new Client(socket);
-            return client.sendSync(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public void get(String key, Consumer<Serializable> responseHandler) {
+        send(new Message(new Header(Header.OP_GET), key), responseHandler);
     }
 
-    protected Socket getSocket(String address) throws IOException {
-        String[] tokens = address.split(":");
-        return new Socket(tokens[0], Integer.parseInt(tokens[1]));
+    protected void send(Serializable data, Consumer<Serializable> responseHandler) {
+        network.send(data, address, responseHandler);
     }
 
     public void stop() {
-        try {
-            if (socket != null) socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        if (network != null) network.shutDown();
     }
 }

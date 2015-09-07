@@ -1,10 +1,6 @@
 package io.nucleo.gui.chat.contacts;
 
-import io.nucleo.storage.Storage;
-import java.io.Serializable;
-import java.net.URL;
-import java.util.*;
-import java.util.function.Consumer;
+import io.nucleo.storage.StorageClient;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -16,17 +12,21 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URL;
+import java.util.*;
+import java.util.function.Consumer;
+
 
 public class ContactsController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(ContactsController.class);
 
-    @FXML private ListView listView;
+    @FXML
+    private ListView listView;
 
     private final ObservableList<String> addresses = FXCollections.observableArrayList();
-    private final List<String> remoteList = new ArrayList<>();
 
     private boolean shuttingDown;
-    private Storage storage;
+    private StorageClient storageClient;
     private String ownAddress;
 
     public ContactsController() {
@@ -40,50 +40,52 @@ public class ContactsController implements Initializable {
 
     private void shutDown() {
         if (!shuttingDown) {
-            Platform.runLater(() -> {
-                shuttingDown = true;
-            });
+            Platform.runLater(() -> shuttingDown = true);
         }
     }
 
-    private void poll() {
+    public void startPolling() {
         Timer timer = new Timer();
         long interval = 1000;
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 Platform.runLater(() -> {
-                    remoteList.clear();
-                    Serializable result = storage.get("addresses");
-                    if (result instanceof Set) {
-                        Set<String> set = (Set<String>) result;
-                        set.stream().filter(e -> !e.equals(ownAddress)).forEach(e -> remoteList.add(e));
-                    }
-
-                    remoteList.sort((o1, o2) -> o1.compareTo(o2));
-
-                    if (!addresses.equals(remoteList)) addresses.setAll(remoteList);
+                    List<String> remoteList = new ArrayList<>();
+                    storageClient.get("addresses", serializable -> {
+                        if (serializable instanceof Set) {
+                            Set<String> set = (Set<String>) serializable;
+                            set.stream().filter(e -> !e.equals(ownAddress)).forEach(
+                                    e -> remoteList.add(e));
+                            remoteList.sort(String::compareTo);
+                            Platform.runLater(() -> {
+                                if (!addresses.equals(remoteList)) addresses.setAll(remoteList);
+                            });
+                        }
+                    });
                 });
             }
         }, 0, interval);
     }
 
-    public void init(Stage stage, Storage storage, Consumer<String> selectionHandler) {
-        this.storage = storage;
+    public void start(Stage stage, StorageClient storageClient, Consumer<String> selectionHandler) {
+        this.storageClient = storageClient;
+        storageClient.start();
         stage.setOnCloseRequest(e -> shutDown());
 
         listView.setItems(addresses);
+
+        //noinspection Convert2Lambda
         listView.getSelectionModel().getSelectedItems().addListener(new ListChangeListener() {
             @Override
             public void onChanged(Change c) {
                 selectionHandler.accept((String) listView.getSelectionModel().getSelectedItem());
             }
         });
-
-        poll();
     }
 
     public void setOwnAddress(String ownAddress) {
         this.ownAddress = ownAddress;
     }
+
 }

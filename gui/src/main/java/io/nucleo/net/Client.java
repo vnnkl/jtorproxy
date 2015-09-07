@@ -3,12 +3,13 @@ package io.nucleo.net;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.*;
-import java.net.Socket;
-import java.util.concurrent.Executors;
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.net.Socket;
+import java.util.concurrent.Executors;
 
 public class Client {
     private static final Logger log = LoggerFactory.getLogger(Client.class);

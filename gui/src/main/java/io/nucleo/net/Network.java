@@ -3,11 +3,6 @@ package io.nucleo.net;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.nucleo.storage.Storage;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.Socket;
-import java.util.function.Consumer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,10 +10,16 @@ import javafx.beans.property.StringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.Socket;
+import java.util.function.Consumer;
+
 public abstract class Network {
     private static final Logger log = LoggerFactory.getLogger(Network.class);
 
     protected final StringProperty status = new SimpleStringProperty();
+    protected final BooleanProperty serverReady = new SimpleBooleanProperty();
     protected final BooleanProperty netWorkReady = new SimpleBooleanProperty();
     protected final StringProperty address = new SimpleStringProperty();
     protected Server server;
@@ -26,10 +27,9 @@ public abstract class Network {
     public Network() {
     }
 
-    abstract public void start(String id,
-                               int serverPort,
-                               Storage storage,
-                               ProcessDataHandler processDataHandler) throws IOException;
+    abstract public void start(String id);
+
+    abstract public void startServer(int serverPort, ProcessDataHandler processDataHandler);
 
     public void shutDown() {
         try {
@@ -45,20 +45,22 @@ public abstract class Network {
         new Thread(() -> {
             status.set("Status: Connect to " + address);
             try {
-                getSocket(peerAddress).close();
+                Socket socket = getSocket(peerAddress);
+                if (socket != null) socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
-    public void send(Serializable text, String address, Consumer<Serializable> responseHandler) {
+    public void send(final Serializable data, String address, Consumer<Serializable> responseHandler) {
         new Thread(() -> {
             try {
                 status.set("Status: Connect to " + address);
                 Socket socket = getSocket(address);
                 Client client = new Client(socket);
-                ListenableFuture<Serializable> future = client.sendAsync(text);
+                log.debug("data to send " + data);
+                ListenableFuture<Serializable> future = client.sendAsync(data);
                 Futures.addCallback(future, new FutureCallback<Serializable>() {
                     @Override
                     public void onSuccess(Serializable serializable) {
@@ -86,7 +88,7 @@ public abstract class Network {
         return status;
     }
 
-    public BooleanProperty netWorkReadyProperty() {
-        return netWorkReady;
+    public BooleanProperty serverReadyProperty() {
+        return serverReady;
     }
 }

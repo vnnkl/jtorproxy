@@ -1,12 +1,15 @@
 package io.nucleo.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Storage {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
@@ -34,4 +37,9 @@ public class Storage {
     public Serializable get(String key) {
         return map.get(key);
     }
+
+    Socket getSocket(String address) throws IOException {
+        return null;
+    }
+
 }

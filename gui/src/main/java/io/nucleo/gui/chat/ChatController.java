@@ -3,10 +3,7 @@ package io.nucleo.gui.chat;
 import io.nucleo.gui.chat.contacts.ContactsController;
 import io.nucleo.net.Network;
 import io.nucleo.net.ProcessDataHandler;
-import io.nucleo.storage.Storage;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
+import io.nucleo.storage.StorageClient;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,16 +25,24 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
 public class ChatController implements Initializable {
     private static final Logger log = LoggerFactory.getLogger(ChatController.class);
     public HBox root;
     private Network network;
     private String peerAddress;
 
-    @FXML private Label statusLabel;
-    @FXML private TextArea textArea;
-    @FXML private TextField inputTextField, addressTextField;
-    @FXML private Button sendButton;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private TextArea textArea;
+    @FXML
+    private TextField inputTextField, addressTextField;
+    @FXML
+    private Button sendButton;
 
     private final BooleanProperty isPeerAddressAvailable = new SimpleBooleanProperty();
     private final BooleanProperty netWorkReady = new SimpleBooleanProperty();
@@ -52,8 +57,8 @@ public class ChatController implements Initializable {
     @Override
     public void initialize(URL fxmlFileLocation, ResourceBundle resources) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/nucleo/gui/chat/contacts/ContactsView" + "" +
-                                                                              ".fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass()
+                    .getResource("/io/nucleo/gui/chat/contacts/ContactsView.fxml"));
             Pane contactsView = loader.load();
             contactsController = loader.getController();
             root.getChildren().add(0, contactsView);
@@ -67,7 +72,7 @@ public class ChatController implements Initializable {
                     // exit handlers
                     newValue.setOnKeyReleased(keyEvent -> {
                         if (new KeyCodeCombination(KeyCode.W,
-                                                   KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new 
+                                KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new
                                 KeyCodeCombination(
                                 KeyCode.Q,
                                 KeyCombination.SHORTCUT_DOWN).match(keyEvent)) shutDown();
@@ -91,10 +96,10 @@ public class ChatController implements Initializable {
             }));
     }
 
-    public void init(Network network, Stage stage, String id, int serverPort, Storage storage) throws IOException {
+    public void init(Network network, Stage stage, String id, int serverPort, StorageClient storageClient) throws IOException {
         this.network = network;
 
-        contactsController.init(stage, storage, this::connectToPeer);
+        contactsController.start(stage, storageClient, this::connectToPeer);
 
         stage.setOnCloseRequest(e -> shutDown());
 
@@ -105,10 +110,15 @@ public class ChatController implements Initializable {
             Platform.runLater(() -> {
                 addressTextField.setText(newValue);
                 contactsController.setOwnAddress(newValue);
+                storageClient.add("addresses", newValue,
+                        serializable -> log.debug("Result storageClient.add: " + serializable));
             });
         });
-        network.netWorkReadyProperty().addListener((observable, oldValue, newValue) -> {
-            Platform.runLater(() -> netWorkReady.set(true));
+        network.serverReadyProperty().addListener((observable, oldValue, newValue) -> {
+            Platform.runLater(() -> {
+                netWorkReady.set(true);
+                contactsController.startPolling();
+            });
         });
 
         processDataHandler = new ProcessDataHandler(serializable -> {
@@ -118,7 +128,8 @@ public class ChatController implements Initializable {
             return null;
         });
 
-        network.start(id, serverPort, storage, processDataHandler);
+        network.start(id);
+        network.startServer(serverPort, processDataHandler);
     }
 
     public void connectToPeer(String peerAddress) {
@@ -139,6 +150,7 @@ public class ChatController implements Initializable {
             });
             new Thread(() -> {
                 network.shutDown();
+                Runtime.getRuntime().exit(0);
             }).start();
         }
 
