@@ -1,9 +1,8 @@
 package io.nucleo.net.proto;
 
-public enum NetMessage implements Message {
+public enum ControlMessage implements Message {
   HEARTBEAT,
   AVAILABLE,
   HANDSHAKE_FAILED,
-  DISCONNECT;
-  
+  DISCONNECT;  
 }

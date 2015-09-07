@@ -16,6 +16,7 @@
     <module>universal</module>
     <module>android</module>
     <module>java</module>
+    <module>net</module>
     <module>gui</module>
   </modules>
 

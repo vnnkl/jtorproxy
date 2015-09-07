@@ -2,28 +2,30 @@ package io.nucleo.net.node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
+import io.nucleo.net.Connection;
+import io.nucleo.net.ConnectionListener;
+import io.nucleo.net.Node;
+import io.nucleo.net.ServerConnectListener;
 import io.nucleo.net.TorNode;
-import io.nucleo.net.node.Connection;
-import io.nucleo.net.node.ConnectionListener;
-import io.nucleo.net.node.MessageListener;
-import io.nucleo.net.node.Node;
 import io.nucleo.net.proto.ContainerMessage;
+import io.nucleo.net.proto.exceptions.ConnectionException;
 
 public class NodeTest {
   private static boolean running;
 
   static Connection currentCon = null;
 
-  static class Listener implements MessageListener {
+  static class Listener implements ConnectionListener {
     @Override
     public void onMessage(Connection con, ContainerMessage msg) {
-      System.out.println("RXD: " + msg.getPayload().toString() + " < " + con.getPeer());
+      System.err.println("RXD: " + msg.getPayload().toString() + " < " + con.getPeer());
 
     }
 
@@ -31,7 +33,7 @@ public class NodeTest {
     public void onDisconnect(Connection con) {
       if (con.equals(currentCon))
         currentCon = null;
-      System.out.println(con.getPeer() + " has disconnected");
+      System.err.println(con.getPeer() + " has disconnected");
 
     }
 
@@ -39,13 +41,28 @@ public class NodeTest {
     public void onTimeout(Connection con) {
       if (con.equals(currentCon))
         currentCon = null;
-      System.out.println(con.getPeer() + " has timed out");
+      System.err.println(con.getPeer() + " has timed out");
 
     }
+
+    @Override
+    public void onError(Connection con, ConnectionException e) {
+      System.err.println("Connection " + con.getPeer() + ": " + e.getMessage());
+      e.printStackTrace();
+
+    }
+
+    @Override
+    public void onReady(Connection con) {
+      System.err.println(con.getPeer() + " is ready");
+      currentCon = con;
+
+    }
+
   }
 
   public static void main(String[] args) throws InstantiationException, IOException {
-    if (args.length != 2){
+    if (args.length != 2) {
       System.err.println("2 params required: hidden service dir + port");
       return;
     }
@@ -54,14 +71,20 @@ public class NodeTest {
     TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(
         dir) {
     };
-    Listener listener = new Listener();
+    final ArrayList<ConnectionListener> listener = new ArrayList<>(1);
+    listener.add(new Listener());
 
     Node node = new Node(tor.createHiddenService(Integer.parseInt(args[1])), tor);
 
-    node.startServer(new ConnectionListener() {
+    node.startListening(new ServerConnectListener() {
       @Override
       public void onConnect(Connection con) {
-        con.addMessageListener(listener);
+        con.addMessageListener(listener.get(0));
+        try {
+          con.listen();
+        } catch (ConnectionException e) {
+          // never happens
+        }
         System.out.println("Connection to " + con.getPeer() + " established :-)");
 
       }
@@ -81,15 +104,16 @@ public class NodeTest {
           if (cmd.length == 2) {
             String host = cmd[1];
             try {
-              currentCon = node.connect(host, listener);
+              node.connect(host, listener);
             } catch (Exception e) {
               System.out.println(e.getMessage());
             }
           }
           break;
         case "list":
+          int i = 0;
           for (Connection con : node.getConnections()) {
-            System.out.println("\t" + con.getPeer());
+            System.out.println("\t" + (i++) + " " + con.getPeer());
           }
           break;
         case "sel":
@@ -107,7 +131,7 @@ public class NodeTest {
             if (cmd.length >= 2) {
               if (currentCon != null) {
                 currentCon.sendMessage(new ContainerMessage(line.substring(4)));
-              }else
+              } else
                 System.err.println("NO node active!");
             }
           } catch (Exception e) {
