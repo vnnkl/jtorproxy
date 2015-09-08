@@ -82,7 +82,7 @@ public class Client {
                 try {
                     if (dataOutputStream != null) dataOutputStream.close();
                     if (dataInputStream != null) dataInputStream.close();
-                    socket.close();
+                    if (socket != null) socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
