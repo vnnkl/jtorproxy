@@ -43,7 +43,7 @@ public abstract class Connection implements Closeable {
   }
 
   Connection(String peer, Socket socket, ObjectOutputStream out, ObjectInputStream in) {
-    log.info("Initiating new connection");
+    log.debug("Initiating new connection");
     this.available = new AtomicBoolean(false);
     this.peer = peer;
     this.socket = socket;
@@ -57,9 +57,8 @@ public abstract class Connection implements Closeable {
     executorService = Executors.newCachedThreadPool();
   }
 
-  
   public abstract boolean isIncoming();
-  
+
   public void addMessageListener(ConnectionListener listener) {
     synchronized (listeners) {
       listeners.add(listener);
@@ -218,8 +217,10 @@ public abstract class Connection implements Closeable {
         } catch (ClassNotFoundException | IOException e) {
           if (e instanceof SocketTimeoutException) {
             onTimeout();
-          } else
-            onError(new ConnectionException(e));
+          } else {
+            if (running)
+              onError(new ConnectionException(e));
+          }
         }
       }
     }

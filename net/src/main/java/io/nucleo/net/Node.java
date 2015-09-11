@@ -1,6 +1,5 @@
 package io.nucleo.net;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -8,11 +7,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
@@ -48,14 +48,15 @@ public class Node {
 
   private final HiddenServiceDescriptor descriptor;
 
-  private final ConcurrentHashMap<String, Connection> connections;
+  private final HashMap<String, Connection> connections;
 
+  @SuppressWarnings("rawtypes")
   private final TorNode tor;
 
   private final AtomicBoolean serverRunning;
 
-  public Node(HiddenServiceDescriptor descriptor, TorNode tor) {
-    this.connections = new ConcurrentHashMap<>();
+  public Node(HiddenServiceDescriptor descriptor, TorNode<?, ?> tor) {
+    this.connections = new HashMap<>();
     this.descriptor = descriptor;
     this.tor = tor;
     this.serverRunning = new AtomicBoolean(false);
@@ -72,28 +73,35 @@ public class Node {
       throw new IOException("This node has not been started yet!");
     }
     if (peer.equals(descriptor.getFullAddress()))
-      throw new IOException("If you find yourself talking to yourself too often, you shoudl really seek help!");
+      throw new IOException("If you find yourself talking to yourself too often, you should really seek help!");
+    synchronized (connections) {
+      if (connections.containsKey(peer))
+        throw new IOException("Already connected to " + peer);
+    }
+
     final String[] split = peer.split(Pattern.quote(":"));
     final Socket sock = tor.connectToHiddenService(split[0], Integer.parseInt(split[1]));
     sock.setSoTimeout(60000);
     return new OutgoingConnection(peer, sock, listeners);
   }
 
-  public Server startListening(ServerConnectListener listener) throws IOException {
+  public synchronized Server startListening(ServerConnectListener listener) throws IOException {
     if (serverRunning.getAndSet(true))
-      throw new IOException("This node has already been started!");
+      throw new IOException("This node is already listening!");
     final Server server = new Server(descriptor.getServerSocket(), listener);
     server.start();
     return server;
   }
 
-  public List<Connection> getConnections() {
-    return new LinkedList<Connection>(connections.values());
+  public Set<Connection> getConnections() {
+    synchronized (connections) {
+      return new HashSet<Connection>(connections.values());
+    }
   }
 
-  public class Server extends Thread implements Closeable {
+  public class Server extends Thread {
 
-    private boolean stopped;
+    private boolean running;
 
     private final ServerSocket    serverSocket;
     private final ExecutorService executorService;
@@ -104,49 +112,59 @@ public class Node {
       super("Server");
       this.serverSocket = descriptor.getServerSocket();
       this.connListener = listener;
-
+      running = true;
       executorService = Executors.newCachedThreadPool();
     }
 
-    @Override
-    public void close() throws IOException {
-      stopped = true;
+    public void shutdown() throws IOException {
+      running = false;
+      synchronized (connections) {
+        final Set<Connection> conns = new HashSet<Connection>(connections.values());
+        for (Connection con : conns) {
+          con.close();
+        }
+      }
       serverSocket.close();
-      executorService.shutdown();
+      try {
+        executorService.awaitTermination(60, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      Node.this.serverRunning.set(false);
     }
 
     @Override
     public void run() {
       try {
-        while (!stopped) {
+        while (running) {
           final Socket socket = serverSocket.accept();
           log.info("Accepting Client on port " + socket.getLocalPort());
-
           executorService.submit(new Acceptor(socket));
         }
-      } catch (IOException var3) {
-        var3.printStackTrace();
+      } catch (IOException e) {
+        if(running)
+        e.printStackTrace();
       }
     }
 
     private boolean verifyIdentity(HELOMessage helo, ObjectInputStream in) throws IOException {
-      log.info("Verifying HELO msg");
+      log.debug("Verifying HELO msg");
       final Socket sock = tor.connectToHiddenService(helo.getOnionUrl(), helo.getPort());
-      log.info("Connected to advertised client " + helo.getPeer());
+      log.debug("Connected to advertised client " + helo.getPeer());
       ObjectOutputStream out = prepareOOSForSocket(sock);
       final IDMessage challenge = new IDMessage(descriptor);
       out.writeObject(challenge);
-      log.info("Sent IDMessage to");
+      log.debug("Sent IDMessage to");
       out.flush();
       out.close();
       sock.close();
-      log.info("Closed socket after sending IDMessage");
+      log.debug("Closed socket after sending IDMessage");
       try {
-        log.info("Waiting for response of challenge");
+        log.debug("Waiting for response of challenge");
         IDMessage response = (IDMessage) in.readObject();
-        log.info("Got response for challenge");
+        log.debug("Got response for challenge");
         final boolean veryfied = challenge.verify(response);
-        log.info("Response verifyed correctly!");
+        log.debug("Response verifyed correctly!");
         return veryfied;
       } catch (ClassNotFoundException e) {
         new ProtocolViolationException(e).printStackTrace();
@@ -195,33 +213,40 @@ public class Node {
 
           String peer = null;
           try {
-            log.info("Waiting for HELO");
+            log.debug("Waiting for HELO");
             final Message helo = (Message) objectInputStream.readObject();
             if (helo instanceof HELOMessage) {
-              log.info("Got HELO from " + ((HELOMessage) helo).getPeer());
-              if (!verifyIdentity((HELOMessage) helo, objectInputStream)) {
-                log.info("verification failed");
-                out.writeObject(ControlMessage.HANDSHAKE_FAILED);
+              peer = ((HELOMessage) helo).getPeer();
+              log.debug("Got HELO from " + peer);
+              boolean areadyConnected;
+              synchronized (connections) {
+                areadyConnected = connections.containsKey(peer);
+              }
+              if (areadyConnected || !verifyIdentity((HELOMessage) helo, objectInputStream)) {
+                log.debug(areadyConnected ? ("already connected to " + peer) : "verification failed");
+                out.writeObject(areadyConnected ? ControlMessage.ALERADY_CONNECTED : ControlMessage.HANDSHAKE_FAILED);
                 out.writeObject(ControlMessage.DISCONNECT);
+                out.flush();
                 out.close();
                 objectInputStream.close();
                 socket.close();
                 return;
               }
-              peer = ((HELOMessage) helo).getPeer();
-              log.info("Verification of " + peer + " successful");
+              log.debug("Verification of " + peer + " successful");
             } else if (helo instanceof IDMessage) {
-              log.info("got IDMessage from " + ((IDMessage) helo).getPeer());
+              log.debug("got IDMessage from " + ((IDMessage) helo).getPeer());
               final Connection client = connections.get(((IDMessage) helo).getPeer());
               if (client != null) {
-                log.info("Got preexisting connection for " + ((IDMessage) helo).getPeer());
+                log.debug("Got preexisting connection for " + ((IDMessage) helo).getPeer());
                 client.sendMsg(((IDMessage) helo).reply());
-                log.info("Sent response for challenge");
+                log.debug("Sent response for challenge");
+              } else {
+                log.debug("Got IDMessage for unknown connection to " + peer);
               }
 
               objectInputStream.close();
               socket.close();
-              log.info("Closed socket for identification");
+              log.debug("Closed socket for identification");
               return;
 
             } else
@@ -237,20 +262,17 @@ public class Node {
             return;
           }
           // Here we go
-          log.info("Incoming Connection ready!");
+          log.debug("Incoming Connection ready!");
           IncomingConnection incomingConnection;
           try {
             // TODO: listeners are only added afterwards, so messages can be lost!
             incomingConnection = new IncomingConnection(peer, socket, out, objectInputStream);
             connListener.onConnect(incomingConnection);
-
           } catch (IOException e) {
             e.printStackTrace();
           }
         }
-
       }
-
     }
   }
 
@@ -258,7 +280,9 @@ public class Node {
     private IncomingConnection(String peer, Socket socket, ObjectOutputStream out, ObjectInputStream in)
         throws IOException {
       super(peer, socket, out, in);
-      connections.put(peer, this);
+      synchronized (connections) {
+        connections.put(peer, this);
+      }
       sendMsg(ControlMessage.AVAILABLE);
     }
 
@@ -281,8 +305,9 @@ public class Node {
 
     @Override
     public void onDisconnect() {
-      connections.remove(getPeer());
-
+      synchronized (connections) {
+        connections.remove(getPeer());
+      }
     }
 
     @Override
@@ -296,21 +321,25 @@ public class Node {
     private OutgoingConnection(String peer, Socket socket, Collection<ConnectionListener> listeners)
         throws IOException {
       super(peer, socket);
-      connections.put(peer, this);
+      synchronized (connections) {
+        connections.put(peer, this);
+      }
       setConnectionListeners(listeners);
       try {
         listen();
       } catch (ConnectionException e) {
         // Never happens
       }
-      log.info("Sending HELO");
+      log.debug("Sending HELO");
       sendMsg(new HELOMessage(descriptor));
-      log.info("Sent HELO");
+      log.debug("Sent HELO");
     }
 
     @Override
     public void onDisconnect() {
-      connections.remove(getPeer());
+      synchronized (connections) {
+        connections.remove(getPeer());
+      }
     }
 
     @Override

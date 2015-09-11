@@ -3,6 +3,7 @@ package io.nucleo.net.node;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -12,6 +13,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.nucleo.net.Connection;
 import io.nucleo.net.ConnectionListener;
 import io.nucleo.net.Node;
+import io.nucleo.net.Node.Server;
 import io.nucleo.net.ServerConnectListener;
 import io.nucleo.net.TorNode;
 import io.nucleo.net.proto.ContainerMessage;
@@ -76,7 +78,7 @@ public class NodeTest {
 
     Node node = new Node(tor.createHiddenService(Integer.parseInt(args[1])), tor);
 
-    node.startListening(new ServerConnectListener() {
+    final Server server = node.startListening(new ServerConnectListener() {
       @Override
       public void onConnect(Connection con) {
         con.addMessageListener(listener.get(0));
@@ -112,7 +114,7 @@ public class NodeTest {
           break;
         case "list":
           int i = 0;
-          for (Connection con : node.getConnections()) {
+          for (Connection con : new LinkedList<>(node.getConnections())) {
             System.out.println("\t" + (i++) + " " + con.getPeer());
           }
           break;
@@ -120,7 +122,7 @@ public class NodeTest {
           try {
             if (cmd.length == 2) {
               int index = Integer.parseInt(cmd[1]);
-              currentCon = node.getConnections().get(index);
+              currentCon = new LinkedList<>(node.getConnections()).get(index);
             }
           } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -137,6 +139,9 @@ public class NodeTest {
           } catch (Exception e) {
             System.out.println(e.getMessage());
           }
+          break;
+        case "end":
+          server.shutdown();
           break;
         default:
           break;
