@@ -1,13 +1,15 @@
 JTorProxy
-=======================
-Forked from [Thali Project](http://www.thaliproject.org/)'s [Tor_Onion_Proxy_Library](https://github.com/thaliproject/Tor_Onion_Proxy_Library).
+=========
+JTorProxy aims at providing an easy-to-use API for interfacing with Tor from Java. JTorProxy also supports hidden services through standard Java ServerSockets.
 
-Includes fixes, an easy-to-use high-level abstraction and a net module, showcasing the code by providing an even higher-level abstraction for bi-directional communication (see `io.nucleo.net.Node`, barely tested).
-This library requires only Java 7.
+This is a fork of [Thali Project](http://www.thaliproject.org/)'s [Tor_Onion_Proxy_Library](https://github.com/thaliproject/Tor_Onion_Proxy_Library).<br>
+Includes fixes, an easy-to-use high-level abstraction and an additional module, *net*, showcasing the code by providing an even higher-level API for bi-directional communication with self-advertising communication parties (see `io.nucleo.net.Node`).
+Although barely tested, this layer is designed to also work with plain TCP Sockets for easier testability.
+
 A simple test program is present in the sources of the *java* module, illustrating the use of the high-level API.
-The even higher-level bidirectional communication with self-advertising communication parties is baked into a simple test program, `io.nucleo.net.node.NodeTest` inside the net module.
+The net module, providing bi-directional communication with self-advertising communication parties, is utilised in a simple test program, `io.nucleo.net.node.NodeTest`, inside the *net* module.
 
-(Original readme follows.)
+Original readme follows:
 
 README
 ======
