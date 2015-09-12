@@ -6,7 +6,8 @@ import io.nucleo.net.messages.Message;
 import java.io.Serializable;
 import java.util.Arrays;
 
-public class StorageMessages implements Serializable {
+//TODO maybe better to use custom messages instead of custom payloads
+public class StorageMessageFactory implements Serializable {
     private static final long serialVersionUID = -8442458727155470264L;
 
     public static Message getAddToMapMessage(String mapKey, String key, byte[] pubKey, Serializable value) {
@@ -123,6 +124,4 @@ public class StorageMessages implements Serializable {
                     '}';
         }
     }
-
-
 }

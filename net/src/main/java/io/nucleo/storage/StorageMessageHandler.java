@@ -5,7 +5,6 @@ import io.nucleo.net.exceptions.InvalidMessageException;
 import io.nucleo.net.listeners.MessageListener;
 import io.nucleo.net.messages.Header;
 import io.nucleo.net.messages.Message;
-import io.nucleo.net.messages.ProtectedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +18,7 @@ import java.util.Set;
 public class StorageMessageHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(StorageMessageHandler.class);
 
-    private Map<String, Map<String, ProtectedData>> map = new HashMap<>();
+    private Map<String, Map<String, ProtectedDataEntry>> map = new HashMap<>();
     private Map<String, Set<Connection>> subscribers = new HashMap<>();
 
     @Override
@@ -30,17 +29,17 @@ public class StorageMessageHandler implements MessageListener {
         switch (header.type) {
             case Header.ADD_TO_MAP:
                 log.debug("ADD_TO_SET");
-                if (message.payload instanceof StorageMessages.AddToMapPayload) {
-                    StorageMessages.AddToMapPayload payload = (StorageMessages.AddToMapPayload) message.payload;
-                    Map<String, ProtectedData> innerMap = map.get(payload.mapKey);
+                if (message.payload instanceof StorageMessageFactory.AddToMapPayload) {
+                    StorageMessageFactory.AddToMapPayload payload = (StorageMessageFactory.AddToMapPayload) message.payload;
+                    Map<String, ProtectedDataEntry> innerMap = map.get(payload.mapKey);
                     if (innerMap == null) {
                         innerMap = new HashMap<>();
                         map.put(payload.mapKey, innerMap);
                     }
-                    ProtectedData protectedData = new ProtectedData(((StorageMessages.AddToMapPayload) message.payload).data, payload.pubKey);
+                    ProtectedDataEntry protectedDataEntry = new ProtectedDataEntry(((StorageMessageFactory.AddToMapPayload) message.payload).data, payload.pubKey);
                     boolean result = innerMap.get(payload.key) == null;
                     if (result)
-                        innerMap.put(payload.key, protectedData);
+                        innerMap.put(payload.key, protectedDataEntry);
 
                     Header replyHeader = new Header(Header.ADD_TO_MAP_RESULT, message.header.hash);
                     Message replyMessage = new Message(replyHeader, new Boolean(result));
@@ -54,15 +53,15 @@ public class StorageMessageHandler implements MessageListener {
                 }
                 break;
             case Header.REMOVE_FROM_MAP:
-                if (message.payload instanceof StorageMessages.RemoveFromMapPayload) {
-                    StorageMessages.RemoveFromMapPayload payload = (StorageMessages.RemoveFromMapPayload) message.payload;
-                    Map<String, ProtectedData> innerMap = map.get(payload.mapKey);
+                if (message.payload instanceof StorageMessageFactory.RemoveFromMapPayload) {
+                    StorageMessageFactory.RemoveFromMapPayload payload = (StorageMessageFactory.RemoveFromMapPayload) message.payload;
+                    Map<String, ProtectedDataEntry> innerMap = map.get(payload.mapKey);
                     boolean result = false;
                     if (innerMap != null) {
-                        ProtectedData protectedData = innerMap.get(payload.key);
+                        ProtectedDataEntry protectedDataEntry = innerMap.get(payload.key);
 
-                        if (protectedData != null) {
-                            result = verifySignature(protectedData.pubKey, ((StorageMessages.RemoveFromMapPayload) message.payload).signature);
+                        if (protectedDataEntry != null) {
+                            result = verifySignature(protectedDataEntry.pubKey, ((StorageMessageFactory.RemoveFromMapPayload) message.payload).signature);
                             if (result)
                                 innerMap.remove(payload.key);
                         } else {
@@ -84,9 +83,9 @@ public class StorageMessageHandler implements MessageListener {
                 }
                 break;
             case Header.SUBSCRIBE_TO_MAP:
-                if (message.payload instanceof StorageMessages.SubscribeToMapPayload) {
+                if (message.payload instanceof StorageMessageFactory.SubscribeToMapPayload) {
                     log.debug("SUBSCRIBE_TO_SET");
-                    StorageMessages.SubscribeToMapPayload payload = (StorageMessages.SubscribeToMapPayload) message.payload;
+                    StorageMessageFactory.SubscribeToMapPayload payload = (StorageMessageFactory.SubscribeToMapPayload) message.payload;
                     synchronized (subscribers) {
                         Set<Connection> subscribersPerTopic = subscribers.get(payload.mapKey);
                         if (subscribersPerTopic == null) {
@@ -104,9 +103,9 @@ public class StorageMessageHandler implements MessageListener {
                 }
                 break;
             case Header.UN_SUBSCRIBE_FROM_MAP:
-                if (message.payload instanceof StorageMessages.UnSubscribeToMapPayload) {
+                if (message.payload instanceof StorageMessageFactory.UnSubscribeToMapPayload) {
                     log.debug("UN_SUBSCRIBE_FROM_SET");
-                    StorageMessages.UnSubscribeToMapPayload payload = (StorageMessages.UnSubscribeToMapPayload) message.payload;
+                    StorageMessageFactory.UnSubscribeToMapPayload payload = (StorageMessageFactory.UnSubscribeToMapPayload) message.payload;
                     Boolean result;
                     synchronized (subscribers) {
                         Set<Connection> subscribersPerTopic = subscribers.get(payload.mapKey);
@@ -123,10 +122,10 @@ public class StorageMessageHandler implements MessageListener {
                 }
                 break;
             case Header.GET_FULL_MAP:
-                if (message.payload instanceof StorageMessages.GetFullSMapPayload) {
+                if (message.payload instanceof StorageMessageFactory.GetFullSMapPayload) {
                     log.debug("GET_FULL_SET");
-                    StorageMessages.GetFullSMapPayload payload = (StorageMessages.GetFullSMapPayload) message.payload;
-                    Map<String, ProtectedData> innerMap = map.get(payload.mapKey);
+                    StorageMessageFactory.GetFullSMapPayload payload = (StorageMessageFactory.GetFullSMapPayload) message.payload;
+                    Map<String, ProtectedDataEntry> innerMap = map.get(payload.mapKey);
                     Header replyHeader = new Header(Header.GET_FULL_MAP_RESULT, message.header.hash);
                     Message replyMessage = new Message(replyHeader, (Serializable) innerMap);
                     connection.sendMessage(replyMessage);

@@ -5,7 +5,7 @@ import io.nucleo.net.listeners.ConnectionListener;
 import io.nucleo.net.listeners.MessageListener;
 import io.nucleo.net.messages.Header;
 import io.nucleo.net.messages.Message;
-import io.nucleo.storage.StorageMessages;
+import io.nucleo.storage.StorageMessageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +44,9 @@ public class Client implements Closeable {
             log.debug("Client MessageListener message " + message);
             switch (message.header.type) {
                 case Header.ADD_TO_MAP_FOR_SUBSCRIBERS:
-                    if (message.payload instanceof StorageMessages.AddToMapPayload) {
+                    if (message.payload instanceof StorageMessageFactory.AddToMapPayload) {
                         synchronized (subscribers) {
-                            Consumer subscriber = subscribers.get(((StorageMessages.AddToMapPayload) message.payload).mapKey);
+                            Consumer subscriber = subscribers.get(((StorageMessageFactory.AddToMapPayload) message.payload).mapKey);
                             log.debug("subscriber " + subscriber);
                             if (subscriber != null) {
                                 log.debug("ADD_TO_SET_FOR_SUBSCRIBERS notify subscriber " + message.payload);
@@ -58,9 +58,9 @@ public class Client implements Closeable {
                     }
                     break;
                 case Header.REMOVE_FROM_MAP_FOR_SUBSCRIBERS:
-                    if (message.payload instanceof StorageMessages.RemoveFromMapPayload) {
+                    if (message.payload instanceof StorageMessageFactory.RemoveFromMapPayload) {
                         synchronized (subscribers) {
-                            Consumer subscriber = subscribers.get(((StorageMessages.RemoveFromMapPayload) message.payload).mapKey);
+                            Consumer subscriber = subscribers.get(((StorageMessageFactory.RemoveFromMapPayload) message.payload).mapKey);
                             if (subscriber != null) {
                                 log.debug("REMOVE_FROM_SET_FOR_SUBSCRIBERS notify subscriber " + message.payload);
                                 subscriber.accept(message.payload);
@@ -102,8 +102,8 @@ public class Client implements Closeable {
 
     public void sendSubscribeToMapMessage(Message message, Consumer responder, Consumer subscriber) throws IOException, InvalidMessageException {
         log.debug("sendSubscribeToMapMessage");
-        if (message.payload instanceof StorageMessages.SubscribeToMapPayload) {
-            StorageMessages.SubscribeToMapPayload payload = (StorageMessages.SubscribeToMapPayload) message.payload;
+        if (message.payload instanceof StorageMessageFactory.SubscribeToMapPayload) {
+            StorageMessageFactory.SubscribeToMapPayload payload = (StorageMessageFactory.SubscribeToMapPayload) message.payload;
             synchronized (subscribers) {
                 subscribers.put(payload.mapKey, subscriber);
             }
@@ -115,8 +115,8 @@ public class Client implements Closeable {
 
     public void sendUnSubscribeToMapMessage(Message message, Consumer responder) throws IOException, InvalidMessageException {
         log.debug("sendUnSubscribeToMapMessage");
-        if (message.payload instanceof StorageMessages.UnSubscribeToMapPayload) {
-            StorageMessages.UnSubscribeToMapPayload payload = (StorageMessages.UnSubscribeToMapPayload) message.payload;
+        if (message.payload instanceof StorageMessageFactory.UnSubscribeToMapPayload) {
+            StorageMessageFactory.UnSubscribeToMapPayload payload = (StorageMessageFactory.UnSubscribeToMapPayload) message.payload;
             synchronized (subscribers) {
                 subscribers.remove(payload.mapKey);
             }

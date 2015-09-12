@@ -6,7 +6,6 @@ import io.nucleo.net.OutgoingConnection;
 import io.nucleo.net.Server;
 import io.nucleo.net.exceptions.InvalidMessageException;
 import io.nucleo.net.listeners.ConnectionListener;
-import io.nucleo.net.messages.ProtectedData;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -182,7 +181,7 @@ public class StorageTest {
         assertTrue((Boolean) results.get("removeFromMap"));
         assertTrue((Boolean) results.get("addToMap4"));
         assertEquals(3, subscriberResults.size());
-        assertEquals(((Map<String, ProtectedData>) results.get("getFullSet")).get("key2").data, "val2");
+        assertEquals(((Map<String, ProtectedDataEntry>) results.get("getFullSet")).get("key2").data, "val2");
 
 
         outgoingConnection.disconnect();

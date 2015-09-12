@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 
+//TODO Header does nto need to be separate class but type and version could be added to Message directly
+// also question if messages should use the type field or separation of messages should be done by using custom classes 
+// and instanceof checks
 public class Header implements Serializable {
     private static final long serialVersionUID = 202114211049868196L;
 
@@ -36,7 +39,8 @@ public class Header implements Serializable {
 
 
     public final int type;
-    public int hash;
+    public int hash;    //TODO used for matching listeners to msg, but should be done differently, 
+    // not sure if hash is needed here
     public int version; //TODO not used yet
 
     public Header(int type) {

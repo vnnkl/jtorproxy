@@ -19,26 +19,26 @@ public class Storage {
 
     public void addToMap(String mapKey, String key, byte[] pubKey, Serializable value, Consumer responder)
             throws IOException {
-        client.sendMessage(StorageMessages.getAddToMapMessage(mapKey, key, pubKey, value), responder);
+        client.sendMessage(StorageMessageFactory.getAddToMapMessage(mapKey, key, pubKey, value), responder);
     }
 
     public void removeFromMap(String mapKey, String key, byte[] signature, Consumer responder)
             throws IOException {
-        client.sendMessage(StorageMessages.getRemoveFromMapMessage(mapKey, key, signature), responder);
+        client.sendMessage(StorageMessageFactory.getRemoveFromMapMessage(mapKey, key, signature), responder);
     }
 
     public void getFullSet(String mapKey, Consumer responder)
             throws IOException {
-        client.sendMessage(StorageMessages.getGetFullMapMessage(mapKey), responder);
+        client.sendMessage(StorageMessageFactory.getGetFullMapMessage(mapKey), responder);
     }
 
     public void subscribeToMap(String mapKey, Consumer responder, Consumer changeListener)
             throws IOException, InvalidMessageException {
-        client.sendSubscribeToMapMessage(StorageMessages.getSubscribeToMapMessage(mapKey), responder, changeListener);
+        client.sendSubscribeToMapMessage(StorageMessageFactory.getSubscribeToMapMessage(mapKey), responder, changeListener);
     }
 
     public void unSubscribeToMap(String mapKey, Consumer responder)
             throws IOException, InvalidMessageException {
-        client.sendUnSubscribeToMapMessage(StorageMessages.getUnSubscribeToMapMessage(mapKey), responder);
+        client.sendUnSubscribeToMapMessage(StorageMessageFactory.getUnSubscribeToMapMessage(mapKey), responder);
     }
 }
