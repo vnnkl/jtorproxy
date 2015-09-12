@@ -17,6 +17,7 @@
     <module>android</module>
     <module>java</module>
     <module>gui</module>
+    <module>net</module>
   </modules>
 
   <build>
