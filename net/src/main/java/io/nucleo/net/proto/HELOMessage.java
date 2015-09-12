@@ -2,13 +2,14 @@ package io.nucleo.net.proto;
 
 import java.util.regex.Pattern;
 
-import io.nucleo.net.HiddenServiceDescriptor;
+import io.nucleo.net.ServiceDescriptor;
 
 public class HELOMessage implements Message {
 
-  private final String peer;
+  private static final long serialVersionUID = -4582946298578924930L;
+  private final String      peer;
 
-  public HELOMessage(HiddenServiceDescriptor descriptor) {
+  public HELOMessage(ServiceDescriptor descriptor) {
     this(descriptor.getFullAddress());
   }
 
@@ -20,7 +21,7 @@ public class HELOMessage implements Message {
     return peer;
   }
 
-  public String getOnionUrl() {
+  public String getHostname() {
     return peer.split(Pattern.quote(":"))[0];
   }
 

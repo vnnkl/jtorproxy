@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +47,7 @@ public class Node {
 
   private static final Logger log = LoggerFactory.getLogger(Node.class);
 
-  private final HiddenServiceDescriptor descriptor;
+  private final ServiceDescriptor descriptor;
 
   private final HashMap<String, Connection> connections;
 
@@ -55,12 +56,19 @@ public class Node {
 
   private final AtomicBoolean serverRunning;
 
+  public Node(TCPServiceDescriptor descriptor) {
+    this(null, descriptor);
+  }
+
   public Node(HiddenServiceDescriptor descriptor, TorNode<?, ?> tor) {
+    this(tor, descriptor);
+  }
+
+  private Node(TorNode<?, ?> tor, ServiceDescriptor descriptor) {
     this.connections = new HashMap<>();
     this.descriptor = descriptor;
     this.tor = tor;
     this.serverRunning = new AtomicBoolean(false);
-
   }
 
   public String getLocalName() {
@@ -79,10 +87,24 @@ public class Node {
         throw new IOException("Already connected to " + peer);
     }
 
-    final String[] split = peer.split(Pattern.quote(":"));
-    final Socket sock = tor.connectToHiddenService(split[0], Integer.parseInt(split[1]));
-    sock.setSoTimeout(60000);
+    final Socket sock = connectToService(peer);
     return new OutgoingConnection(peer, sock, listeners);
+  }
+
+  private Socket connectToService(String hostname, int port) throws IOException, UnknownHostException, SocketException {
+    final Socket sock;
+    if (tor != null)
+      sock = tor.connectToHiddenService(hostname, port);
+    else
+      sock = new Socket(hostname, port);
+    sock.setSoTimeout(60000);
+    return sock;
+  }
+
+  private Socket connectToService(String peer) throws IOException, UnknownHostException, SocketException {
+    final String[] split = peer.split(Pattern.quote(":"));
+    return connectToService(split[0], Integer.parseInt(split[1]));
+
   }
 
   public synchronized Server startListening(ServerConnectListener listener) throws IOException {
@@ -126,11 +148,12 @@ public class Node {
       }
       serverSocket.close();
       try {
-        executorService.awaitTermination(60, TimeUnit.SECONDS);
+        executorService.awaitTermination(2, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
       Node.this.serverRunning.set(false);
+      log.debug("Server successfully shutdown");
     }
 
     @Override
@@ -142,20 +165,28 @@ public class Node {
           executorService.submit(new Acceptor(socket));
         }
       } catch (IOException e) {
-        if(running)
-        e.printStackTrace();
+        if (running)
+          e.printStackTrace();
       }
     }
 
     private boolean verifyIdentity(HELOMessage helo, ObjectInputStream in) throws IOException {
       log.debug("Verifying HELO msg");
-      final Socket sock = tor.connectToHiddenService(helo.getOnionUrl(), helo.getPort());
+      final Socket sock = connectToService(helo.getHostname(), helo.getPort());
+     
       log.debug("Connected to advertised client " + helo.getPeer());
       ObjectOutputStream out = prepareOOSForSocket(sock);
       final IDMessage challenge = new IDMessage(descriptor);
       out.writeObject(challenge);
       log.debug("Sent IDMessage to");
       out.flush();
+      // wait for other side to close
+      try {
+        while (sock.getInputStream().read() != -1)
+          ;
+      } catch (IOException e) {
+        // no matter
+      }
       out.close();
       sock.close();
       log.debug("Closed socket after sending IDMessage");
@@ -213,7 +244,7 @@ public class Node {
 
           String peer = null;
           try {
-            log.debug("Waiting for HELO");
+            log.debug("Waiting for HELO od Identification");
             final Message helo = (Message) objectInputStream.readObject();
             if (helo instanceof HELOMessage) {
               peer = ((HELOMessage) helo).getPeer();
@@ -243,7 +274,8 @@ public class Node {
               } else {
                 log.debug("Got IDMessage for unknown connection to " + peer);
               }
-
+              out.flush();
+              out.close();
               objectInputStream.close();
               socket.close();
               log.debug("Closed socket for identification");

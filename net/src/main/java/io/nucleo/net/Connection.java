@@ -1,6 +1,7 @@
 package io.nucleo.net;
 
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -218,8 +219,17 @@ public abstract class Connection implements Closeable {
           if (e instanceof SocketTimeoutException) {
             onTimeout();
           } else {
-            if (running)
+            if (running) {
               onError(new ConnectionException(e));
+              //TODO: Fault Tolerance?
+              if (e instanceof EOFException) {
+                try {
+                  close(false);
+                } catch (IOException e1) {
+                  e1.printStackTrace();
+                }
+              }
+            }
           }
         }
       }

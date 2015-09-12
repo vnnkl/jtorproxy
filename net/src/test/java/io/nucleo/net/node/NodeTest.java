@@ -15,6 +15,7 @@ import io.nucleo.net.ConnectionListener;
 import io.nucleo.net.Node;
 import io.nucleo.net.Node.Server;
 import io.nucleo.net.ServerConnectListener;
+import io.nucleo.net.TCPServiceDescriptor;
 import io.nucleo.net.TorNode;
 import io.nucleo.net.proto.ContainerMessage;
 import io.nucleo.net.proto.exceptions.ConnectionException;
@@ -64,19 +65,24 @@ public class NodeTest {
   }
 
   public static void main(String[] args) throws InstantiationException, IOException {
-    if (args.length != 2) {
-      System.err.println("2 params required: hidden service dir + port");
+    if ((args.length != 2) && (args.length != 1)) {
+      System.err.println("1 or 2 params required: service port, or hidden service dir + port");
       return;
     }
-    File dir = new File(args[0]);
-    dir.mkdirs();
-    TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(
-        dir) {
-    };
+    final Node node;
     final ArrayList<ConnectionListener> listener = new ArrayList<>(1);
     listener.add(new Listener());
+    if (args.length == 2) {
+      File dir = new File(args[0]);
+      dir.mkdirs();
+      TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(
+          dir) {
+      };
 
-    Node node = new Node(tor.createHiddenService(Integer.parseInt(args[1])), tor);
+      node = new Node(tor.createHiddenService(Integer.parseInt(args[1])), tor);
+    } else {
+      node = new Node(new TCPServiceDescriptor("localhost", Integer.parseInt(args[0])));
+    }
 
     final Server server = node.startListening(new ServerConnectListener() {
       @Override

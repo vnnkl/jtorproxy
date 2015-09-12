@@ -2,9 +2,10 @@ JTorProxy
 =======================
 Forked from [Thali Project](http://www.thaliproject.org/)'s [Tor_Onion_Proxy_Library](https://github.com/thaliproject/Tor_Onion_Proxy_Library).
 
-Includes fixes, an easy-to-use high-level abstraction and a GUI module, showcasing the code.
-Even though the GUI requires Java 8, the library itself (the modules *universal* and *java*) require only Java 7.
+Includes fixes, an easy-to-use high-level abstraction and a net module, showcasing the code by providing an even higher-level abstraction for bi-directional communication (see `io.nucleo.net.Node`, barely tested).
+This library requires only Java 7.
 A simple test program is present in the sources of the *java* module, illustrating the use of the high-level API.
+The even higher-level bidirectional communication with self-advertising communication parties is baked into a simple test program, `io.nucleo.net.node.NodeTest` inside the net module.
 
 (Original readme follows.)
 

@@ -3,10 +3,11 @@ package io.nucleo.net.proto;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-import io.nucleo.net.HiddenServiceDescriptor;
+import io.nucleo.net.ServiceDescriptor;
 
 public class IDMessage implements Message {
 
+  private static final long serialVersionUID = -2214485311644580948L;
   private static SecureRandom rnd;
 
   static {
@@ -20,7 +21,7 @@ public class IDMessage implements Message {
   private final String id;
   private final long   nonce;
 
-  public IDMessage(HiddenServiceDescriptor descriptor) {
+  public IDMessage(ServiceDescriptor descriptor) {
     this(descriptor.getFullAddress(), rnd.nextLong());
   }
 
@@ -34,11 +35,11 @@ public class IDMessage implements Message {
   }
 
   public IDMessage reply() {
-    return new IDMessage(id, nonce << 1);
+    return new IDMessage(id, nonce);
   }
 
   public boolean verify(IDMessage msg) {
-    return id.equals(msg.id) && ((nonce << 1) == msg.nonce);
+    return id.equals(msg.id) && (nonce == msg.nonce);
   }
 
   public String toString() {
