@@ -12,6 +12,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
 import io.nucleo.net.Connection;
 import io.nucleo.net.ConnectionListener;
+import io.nucleo.net.DisconnectReason;
 import io.nucleo.net.Node;
 import io.nucleo.net.Node.Server;
 import io.nucleo.net.ServerConnectListener;
@@ -33,18 +34,10 @@ public class NodeTest {
     }
 
     @Override
-    public void onDisconnect(Connection con) {
+    public void onDisconnect(Connection con, DisconnectReason reason) {
       if (con.equals(currentCon))
         currentCon = null;
-      System.err.println(con.getPeer() + " has disconnected");
-
-    }
-
-    @Override
-    public void onTimeout(Connection con) {
-      if (con.equals(currentCon))
-        currentCon = null;
-      System.err.println(con.getPeer() + " has timed out");
+      System.err.println(con.getPeer() + " has disconnected: " + reason.toString());
 
     }
 

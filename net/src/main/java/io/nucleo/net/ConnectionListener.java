@@ -7,9 +7,7 @@ public interface ConnectionListener {
 
   public abstract void onMessage(Connection con, ContainerMessage msg);
 
-  public void onDisconnect(Connection con);
-
-  public void onTimeout(Connection con);
+  public void onDisconnect(Connection con, DisconnectReason reason);
 
   public void onError(Connection con, ConnectionException e);
 

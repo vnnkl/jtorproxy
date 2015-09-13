@@ -101,7 +101,7 @@ public abstract class Connection implements Closeable {
       if (msg instanceof ControlMessage) {
         switch ((ControlMessage) msg) {
           case DISCONNECT:
-            close(true);
+            close(false, PredefinedDisconnectReason.createReason(PredefinedDisconnectReason.CONNECTION_CLOSED, true));
             break;
           case AVAILABLE:
             startHeartbeat();
@@ -126,23 +126,18 @@ public abstract class Connection implements Closeable {
 
   protected abstract void onDisconnect();
 
-  private void onDisconn() {
+  private void onDisconn(DisconnectReason reason) {
     onDisconnect();
     synchronized (listeners) {
       for (ConnectionListener l : listeners) {
-        l.onDisconnect(this);
+        l.onDisconnect(this, reason);
       }
     }
   }
 
   private void onTimeout() {
-    synchronized (listeners) {
-      for (ConnectionListener l : listeners) {
-        l.onTimeout(this);
-      }
-    }
     try {
-      close(false);
+      close(false, PredefinedDisconnectReason.TIMEOUT);
     } catch (IOException e1) {
     }
   }
@@ -156,12 +151,12 @@ public abstract class Connection implements Closeable {
   }
 
   public void close() throws IOException {
-    close(true);
+    close(true, PredefinedDisconnectReason.createReason(PredefinedDisconnectReason.CONNECTION_CLOSED, false));
   }
 
-  private void close(boolean graceful) throws IOException {
+  private void close(boolean graceful, DisconnectReason reason) throws IOException {
     running = false;
-    onDisconn();
+    onDisconn(reason);
     if (graceful) {
       try {
         sendMsg(ControlMessage.DISCONNECT);
@@ -221,10 +216,10 @@ public abstract class Connection implements Closeable {
           } else {
             if (running) {
               onError(new ConnectionException(e));
-              //TODO: Fault Tolerance?
+              // TODO: Fault Tolerance?
               if (e instanceof EOFException) {
                 try {
-                  close(false);
+                  close(false, PredefinedDisconnectReason.RESET);
                 } catch (IOException e1) {
                   e1.printStackTrace();
                 }
