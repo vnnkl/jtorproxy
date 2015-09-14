@@ -1,10 +1,13 @@
 package io.nucleo.net;
 
-import java.io.Closeable;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import io.nucleo.net.proto.ContainerMessage;
+import io.nucleo.net.proto.ControlMessage;
+import io.nucleo.net.proto.Message;
+import io.nucleo.net.proto.exceptions.ConnectionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Collection;
@@ -12,14 +15,6 @@ import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.nucleo.net.proto.ContainerMessage;
-import io.nucleo.net.proto.ControlMessage;
-import io.nucleo.net.proto.Message;
-import io.nucleo.net.proto.exceptions.ConnectionException;
 
 public abstract class Connection implements Closeable {
 
@@ -77,6 +72,10 @@ public abstract class Connection implements Closeable {
     synchronized (listeners) {
       listeners.remove(listener);
     }
+  }
+
+  public boolean isAvailable() {
+    return available.get();
   }
 
   void sendMsg(Message msg) throws IOException {
