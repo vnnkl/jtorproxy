@@ -15,4 +15,11 @@ public class ContainerMessage implements Message {
   public Serializable getPayload() {
     return payload;
   }
+
+  @Override
+  public String toString() {
+    return "ContainerMessage{" +
+            "payload=" + payload +
+            '}';
+  }
 }

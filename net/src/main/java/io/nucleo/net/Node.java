@@ -74,6 +74,10 @@ public class Node {
     return descriptor.getFullAddress();
   }
 
+  public void shutdown() throws IOException {
+    if (tor != null) tor.shutdown();
+  }
+
   public Connection connect(String peer, ConnectionListener listener)
       throws NumberFormatException, IOException {
     if (!serverRunning.get()) {
