@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,7 +25,7 @@ public abstract class Connection implements Closeable {
   private final LinkedList<ConnectionListener> listeners;
   private final String                         peer;
   private boolean                              running;
-  private final AtomicBoolean                  available;
+    private final AtomicBoolean ready;
   private final AtomicBoolean                  listening;
 
   private final ExecutorService executorService;
@@ -40,7 +39,7 @@ public abstract class Connection implements Closeable {
 
   Connection(String peer, Socket socket, ObjectOutputStream out, ObjectInputStream in) {
     log.debug("Initiating new connection");
-    this.available = new AtomicBoolean(false);
+      this.ready = new AtomicBoolean(false);
     this.peer = peer;
     this.socket = socket;
     this.in = in;
@@ -61,21 +60,14 @@ public abstract class Connection implements Closeable {
     }
   }
 
-  protected void setConnectionListeners(Collection<ConnectionListener> listeners) {
-    synchronized (listeners) {
-      this.listeners.clear();
-      this.listeners.addAll(listeners);
-    }
-  }
-
   public void removeMessageListener(ConnectionListener listener) {
     synchronized (listeners) {
       listeners.remove(listener);
     }
   }
 
-  public boolean isAvailable() {
-    return available.get();
+    public boolean isReady() {
+        return ready.get();
   }
 
   void sendMsg(Message msg) throws IOException {
@@ -84,7 +76,7 @@ public abstract class Connection implements Closeable {
   }
 
   public void sendMessage(ContainerMessage msg) throws IOException {
-    if (!available.get())
+      if (!ready.get())
       throw new IOException("Connection is not yet available!");
     sendMsg(msg);
   }
@@ -114,7 +106,7 @@ public abstract class Connection implements Closeable {
   }
 
   protected void onReady() {
-    if (!available.getAndSet(true)) {
+      if (!ready.getAndSet(true)) {
       synchronized (listeners) {
         for (ConnectionListener l : listeners) {
           l.onReady(this);

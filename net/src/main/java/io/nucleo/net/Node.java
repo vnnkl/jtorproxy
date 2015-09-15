@@ -1,5 +1,14 @@
 package io.nucleo.net;
 
+import io.nucleo.net.proto.ControlMessage;
+import io.nucleo.net.proto.HELOMessage;
+import io.nucleo.net.proto.IDMessage;
+import io.nucleo.net.proto.Message;
+import io.nucleo.net.proto.exceptions.ConnectionException;
+import io.nucleo.net.proto.exceptions.ProtocolViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,25 +16,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.nucleo.net.proto.ControlMessage;
-import io.nucleo.net.proto.HELOMessage;
-import io.nucleo.net.proto.IDMessage;
-import io.nucleo.net.proto.Message;
-import io.nucleo.net.proto.exceptions.ConnectionException;
-import io.nucleo.net.proto.exceptions.ProtocolViolationException;
 
 public class Node {
 
@@ -49,7 +48,7 @@ public class Node {
 
   private final ServiceDescriptor descriptor;
 
-  private final HashMap<String, Connection> connections;
+  private final Map<String, Connection> connections;
 
   @SuppressWarnings("rawtypes")
   private final TorNode tor;
@@ -75,7 +74,7 @@ public class Node {
     return descriptor.getFullAddress();
   }
 
-  public Connection connect(String peer, Collection<ConnectionListener> listeners)
+  public Connection connect(String peer, ConnectionListener listener)
       throws NumberFormatException, IOException {
     if (!serverRunning.get()) {
       throw new IOException("This node has not been started yet!");
@@ -88,7 +87,7 @@ public class Node {
     }
 
     final Socket sock = connectToService(peer);
-    return new OutgoingConnection(peer, sock, listeners);
+    return new OutgoingConnection(peer, sock, listener);
   }
 
   private Socket connectToService(String hostname, int port) throws IOException, UnknownHostException, SocketException {
@@ -115,6 +114,13 @@ public class Node {
     return server;
   }
 
+  // TODO @Bernd added that to access easily existing connections
+  public Connection getConnection(String peerAddress) {
+    synchronized (connections) {
+      return connections.get(peerAddress);
+    }
+  }
+    
   public Set<Connection> getConnections() {
     synchronized (connections) {
       return new HashSet<Connection>(connections.values());
@@ -350,13 +356,13 @@ public class Node {
 
   private class OutgoingConnection extends Connection {
 
-    private OutgoingConnection(String peer, Socket socket, Collection<ConnectionListener> listeners)
+    private OutgoingConnection(String peer, Socket socket, ConnectionListener listener)
         throws IOException {
       super(peer, socket);
       synchronized (connections) {
         connections.put(peer, this);
       }
-      setConnectionListeners(listeners);
+      addMessageListener(listener);
       try {
         listen();
       } catch (ConnectionException e) {
