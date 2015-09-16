@@ -6,6 +6,7 @@ import io.nucleo.net.*;
 import io.nucleo.net.Node.Server;
 import io.nucleo.net.proto.ContainerMessage;
 import io.nucleo.net.proto.exceptions.ConnectionException;
+import org.junit.Ignore;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+@Ignore
 public class NodeTest {
   private static boolean running;
 
