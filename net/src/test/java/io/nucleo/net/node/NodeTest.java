@@ -22,7 +22,7 @@ public class NodeTest {
 
   static class Listener implements ConnectionListener {
     @Override
-    public void onMessage(Connection con, ContainerMessage msg) {
+    public void onContainerMessage(Connection con, ContainerMessage msg) {
       System.err.println("RXD: " + msg.getPayload().toString() + " < " + con.getPeer());
 
     }

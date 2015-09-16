@@ -5,7 +5,7 @@ import io.nucleo.net.proto.exceptions.ConnectionException;
 
 public interface ConnectionListener {
 
-  public abstract void onMessage(Connection con, ContainerMessage msg);
+  public abstract void onContainerMessage(Connection con, ContainerMessage msg);
 
   public void onDisconnect(Connection con, DisconnectReason reason);
 

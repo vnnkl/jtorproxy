@@ -83,7 +83,7 @@ public abstract class Connection implements Closeable {
         if (msg instanceof ContainerMessage) {
             synchronized (connectionListeners) {
                 for (ConnectionListener l : connectionListeners)
-                    l.onMessage(this, (ContainerMessage) msg);
+                    l.onContainerMessage(this, (ContainerMessage) msg);
             }
         } else {
             if (msg instanceof ControlMessage) {
