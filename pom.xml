@@ -16,7 +16,6 @@
     <module>universal</module>
     <module>android</module>
     <module>java</module>
-    <module>gui</module>
   </modules>
 
   <build>
