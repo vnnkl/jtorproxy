@@ -1,10 +1,13 @@
 package io.nucleo.net;
 
-import java.io.Closeable;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import io.nucleo.net.proto.ContainerMessage;
+import io.nucleo.net.proto.ControlMessage;
+import io.nucleo.net.proto.Message;
+import io.nucleo.net.proto.exceptions.ConnectionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Collection;
@@ -13,14 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.nucleo.net.proto.ContainerMessage;
-import io.nucleo.net.proto.ControlMessage;
-import io.nucleo.net.proto.Message;
-import io.nucleo.net.proto.exceptions.ConnectionException;
-
 public abstract class Connection implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(Connection.class);
@@ -28,16 +23,16 @@ public abstract class Connection implements Closeable {
   private final Socket                         socket;
   private final ObjectOutputStream             out;
   private final ObjectInputStream              in;
-  private final LinkedList<ConnectionListener> listeners;
+  private final LinkedList<ConnectionListener> connectionListeners;
   private final String                         peer;
   private boolean                              running;
   private final AtomicBoolean                  available;
   private final AtomicBoolean                  listening;
 
   private final ExecutorService executorService;
-  private final Listener        listener;
+  private final InputStreamListener            inputStreamListener;
 
-  private final AtomicBoolean heartbeating;
+  private final AtomicBoolean heartBeating;
 
   public Connection(String peer, Socket socket) throws IOException {
     this(peer, socket, Node.prepareOOSForSocket(socket), new ObjectInputStream(socket.getInputStream()));
@@ -52,30 +47,30 @@ public abstract class Connection implements Closeable {
     this.out = out;
     running = true;
     listening = new AtomicBoolean(false);
-    heartbeating = new AtomicBoolean(false);
-    this.listeners = new LinkedList<>();
-    this.listener = new Listener();
+    heartBeating = new AtomicBoolean(false);
+    this.connectionListeners = new LinkedList<>();
+    this.inputStreamListener = new InputStreamListener();
     executorService = Executors.newCachedThreadPool();
   }
 
   public abstract boolean isIncoming();
 
   public void addMessageListener(ConnectionListener listener) {
-    synchronized (listeners) {
-      listeners.add(listener);
+    synchronized (connectionListeners) {
+      connectionListeners.add(listener);
     }
   }
 
   protected void setConnectionListeners(Collection<ConnectionListener> listeners) {
     synchronized (listeners) {
-      this.listeners.clear();
-      this.listeners.addAll(listeners);
+      this.connectionListeners.clear();
+      this.connectionListeners.addAll(listeners);
     }
   }
 
   public void removeMessageListener(ConnectionListener listener) {
-    synchronized (listeners) {
-      listeners.remove(listener);
+    synchronized (connectionListeners) {
+      connectionListeners.remove(listener);
     }
   }
 
@@ -93,8 +88,8 @@ public abstract class Connection implements Closeable {
   protected void onMessage(Message msg) throws IOException {
     log.debug("RXD: " + msg.toString());
     if (msg instanceof ContainerMessage) {
-      synchronized (listeners) {
-        for (ConnectionListener l : listeners)
+      synchronized (connectionListeners) {
+        for (ConnectionListener l : connectionListeners)
           l.onMessage(this, (ContainerMessage) msg);
       }
     } else {
@@ -116,8 +111,8 @@ public abstract class Connection implements Closeable {
 
   protected void onReady() {
     if (!available.getAndSet(true)) {
-      synchronized (listeners) {
-        for (ConnectionListener l : listeners) {
+      synchronized (connectionListeners) {
+        for (ConnectionListener l : connectionListeners) {
           l.onReady(this);
         }
       }
@@ -128,8 +123,8 @@ public abstract class Connection implements Closeable {
 
   private void onDisconn(DisconnectReason reason) {
     onDisconnect();
-    synchronized (listeners) {
-      for (ConnectionListener l : listeners) {
+    synchronized (connectionListeners) {
+      for (ConnectionListener l : connectionListeners) {
         l.onDisconnect(this, reason);
       }
     }
@@ -143,8 +138,8 @@ public abstract class Connection implements Closeable {
   }
 
   protected void onError(Exception e) {
-    synchronized (listeners) {
-      for (ConnectionListener l : listeners) {
+    synchronized (connectionListeners) {
+      for (ConnectionListener l : connectionListeners) {
         l.onError(this, new ConnectionException(e));
       }
     }
@@ -175,7 +170,7 @@ public abstract class Connection implements Closeable {
   }
 
   void startHeartbeat() {
-    if (!heartbeating.getAndSet(true)) {
+    if (!heartBeating.getAndSet(true)) {
       log.debug("Starting Heartbeat");
       executorService.submit(new Runnable() {
         public void run() {
@@ -200,10 +195,10 @@ public abstract class Connection implements Closeable {
   public void listen() throws ConnectionException {
     if (listening.getAndSet(true))
       throw new ConnectionException("Already Listening!");
-    executorService.submit(listener);
+    executorService.submit(inputStreamListener);
   }
 
-  private class Listener implements Runnable {
+  private class InputStreamListener implements Runnable {
     @Override
     public void run() {
       while (running) {
