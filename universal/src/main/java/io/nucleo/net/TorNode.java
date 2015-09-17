@@ -2,6 +2,7 @@ package io.nucleo.net;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.GregorianCalendar;
@@ -13,8 +14,6 @@ import com.msopentech.thali.toronionproxy.OnionProxyContext;
 import com.msopentech.thali.toronionproxy.OnionProxyManager;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-
-import java.lang.reflect.ParameterizedType;
 
 public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyContext> {
 
@@ -69,11 +68,13 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
                 if (debug)
                     log.info("Took " + (GregorianCalendar.getInstance().getTimeInMillis() - before)
                             + " milliseconds to connect to " + onionUrl + ":" + port);
+                ssock.setTcpNoDelay(true);
                 return ssock;
             } catch (UnknownHostException exx) {
                 try {
                     if (debug)
-                        log.debug("Try " + (i + 1) + " connecting to " + onionUrl + ":" + port + " failed. retrying...");
+                        log.debug(
+                                "Try " + (i + 1) + " connecting to " + onionUrl + ":" + port + " failed. retrying...");
                     Thread.sleep(RETRY_SLEEP);
                     continue;
                 } catch (InterruptedException e) {
