@@ -1,20 +1,26 @@
 package io.nucleo.net.node;
 
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
-import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
-import io.nucleo.net.*;
-import io.nucleo.net.Node.Server;
-import io.nucleo.net.proto.ContainerMessage;
-import io.nucleo.net.proto.exceptions.ConnectionException;
-import org.junit.Ignore;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
-@Ignore
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
+import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
+
+import io.nucleo.net.Connection;
+import io.nucleo.net.ConnectionListener;
+import io.nucleo.net.DisconnectReason;
+import io.nucleo.net.Node;
+import io.nucleo.net.Node.Server;
+import io.nucleo.net.ServerConnectListener;
+import io.nucleo.net.TCPServiceDescriptor;
+import io.nucleo.net.TorNode;
+import io.nucleo.net.proto.ContainerMessage;
+import io.nucleo.net.proto.exceptions.ConnectionException;
+
 public class NodeTest {
   private static boolean running;
 
@@ -22,7 +28,7 @@ public class NodeTest {
 
   static class Listener implements ConnectionListener {
     @Override
-    public void onContainerMessage(Connection con, ContainerMessage msg) {
+    public void onMessage(Connection con, ContainerMessage msg) {
       System.err.println("RXD: " + msg.getPayload().toString() + " < " + con.getPeer());
 
     }
@@ -57,7 +63,8 @@ public class NodeTest {
       return;
     }
     final Node node;
-    final ConnectionListener listener = new Listener();
+    final ArrayList<ConnectionListener> listener = new ArrayList<>(1);
+    listener.add(new Listener());
     if (args.length == 2) {
       File dir = new File(args[0]);
       dir.mkdirs();
@@ -73,7 +80,7 @@ public class NodeTest {
     final Server server = node.startListening(new ServerConnectListener() {
       @Override
       public void onConnect(Connection con) {
-        con.addMessageListener(listener);
+        con.addMessageListener(listener.get(0));
         try {
           con.listen();
         } catch (ConnectionException e) {

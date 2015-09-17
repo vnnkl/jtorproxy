@@ -4,6 +4,6 @@ public enum ControlMessage implements Message {
   HEARTBEAT,
   AVAILABLE,
   HANDSHAKE_FAILED,
-  ALREADY_CONNECTED,
+  ALERADY_CONNECTED,
   DISCONNECT;  
 }
