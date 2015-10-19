@@ -1,14 +1,6 @@
 package io.nucleo.net;
 
-import io.nucleo.net.proto.ControlMessage;
-import io.nucleo.net.proto.HELOMessage;
-import io.nucleo.net.proto.IDMessage;
-import io.nucleo.net.proto.Message;
-import io.nucleo.net.proto.exceptions.ConnectionException;
-import io.nucleo.net.proto.exceptions.ProtocolViolationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,6 +17,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.nucleo.net.proto.ControlMessage;
+import io.nucleo.net.proto.HELOMessage;
+import io.nucleo.net.proto.IDMessage;
+import io.nucleo.net.proto.Message;
+import io.nucleo.net.proto.exceptions.ConnectionException;
+import io.nucleo.net.proto.exceptions.ProtocolViolationException;
 
 public class Node {
 
@@ -119,7 +121,7 @@ public class Node {
       return connections.get(peerAddress);
     }
   }
-  
+
   public Set<Connection> getConnections() {
     synchronized (connections) {
       return new HashSet<Connection>(connections.values());
@@ -178,7 +180,7 @@ public class Node {
     private boolean verifyIdentity(HELOMessage helo, ObjectInputStream in) throws IOException {
       log.debug("Verifying HELO msg");
       final Socket sock = connectToService(helo.getHostname(), helo.getPort());
-     
+
       log.debug("Connected to advertised client " + helo.getPeer());
       ObjectOutputStream out = prepareOOSForSocket(sock);
       final IDMessage challenge = new IDMessage(descriptor);
@@ -222,7 +224,6 @@ public class Node {
           try {
             socket.setSoTimeout(60 * 1000);
           } catch (SocketException e2) {
-
             e2.printStackTrace();
             try {
               socket.close();
@@ -238,6 +239,8 @@ public class Node {
           try {
             out = prepareOOSForSocket(socket);
             objectInputStream = new ObjectInputStream(socket.getInputStream());
+          } catch (EOFException e) {
+            log.info("Got bogus incoming connection");
           } catch (IOException e) {
             e.printStackTrace();
             try {

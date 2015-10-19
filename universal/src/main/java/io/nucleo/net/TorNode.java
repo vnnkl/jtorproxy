@@ -6,6 +6,8 @@ import java.lang.reflect.ParameterizedType;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.GregorianCalendar;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +24,8 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     private static final int TOTAL_SEC_PER_STARTUP = 4 * 60;
     private static final int TRIES_PER_STARTUP = 5;
     private static final int TRIES_PER_HS_STARTUP = 150;
+    
+    private final ExecutorService executorService;
 
     private static final Logger log = LoggerFactory.getLogger(TorNode.class);
 
@@ -41,6 +45,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         }
         log.debug("Running Tornode with " + mgr.getSimpleName() + " and  " + ctx.getSimpleName());
         tor = initTor(torDirectory, mgr, ctx);
+        executorService = Executors.newFixedThreadPool(1);
         int proxyPort = tor.getIPv4LocalHostSocksPort();
         log.info("TorSocks running on port " + proxyPort);
         this.proxy = setupSocksProxy(proxyPort);
@@ -86,16 +91,30 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         throw new IOException("Cannot connect to hidden service");
     }
 
-    public HiddenServiceDescriptor createHiddenService(int localPort, int servicePort) throws IOException {
-        long before = GregorianCalendar.getInstance().getTimeInMillis();
-        String hiddenServiceName = tor.publishHiddenService(servicePort, localPort);
+    public HiddenServiceDescriptor createHiddenService(final int localPort, final int servicePort, final HiddenServiceReadyListener listener) throws IOException {
+        final long before = GregorianCalendar.getInstance().getTimeInMillis();
+        final String hiddenServiceName = tor.publishHiddenService(servicePort, localPort);
         final HiddenServiceDescriptor hiddenServiceDescriptor = new HiddenServiceDescriptor(hiddenServiceName,
                 localPort, servicePort);
-        return tryConnectToHiddenService(servicePort, before, hiddenServiceName, hiddenServiceDescriptor);
+        
+        executorService.submit(new Runnable() {
+            
+            @Override
+            public void run() {
+              try{
+                  tryConnectToHiddenService(servicePort, before, hiddenServiceName, hiddenServiceDescriptor);
+                  listener.onConnect(hiddenServiceDescriptor);
+              }catch( IOException e){
+                  listener.onConnectionFailure(hiddenServiceDescriptor, e);
+              }
+                
+            }
+        });
+        return hiddenServiceDescriptor;
 
     }
 
-    private HiddenServiceDescriptor tryConnectToHiddenService(int servicePort, long before, String hiddenServiceName,
+    private void tryConnectToHiddenService(int servicePort, long before, String hiddenServiceName,
             final HiddenServiceDescriptor hiddenServiceDescriptor) throws IOException {
         new Thread(new Runnable() {
             @Override
@@ -122,13 +141,13 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
             }
             log.info("Took " + (GregorianCalendar.getInstance().getTimeInMillis() - before)
                     + " milliseconds to connect to publish " + hiddenServiceName + ":" + servicePort);
-            return hiddenServiceDescriptor;
+            return;
         }
         throw new IOException("Could not publish Hidden Service!");
     }
 
-    public HiddenServiceDescriptor createHiddenService(int port) throws IOException {
-        return createHiddenService(port, port);
+    public HiddenServiceDescriptor createHiddenService(int port, HiddenServiceReadyListener listener) throws IOException {
+        return createHiddenService(port, port, listener);
     }
 
     public void shutdown() throws IOException {

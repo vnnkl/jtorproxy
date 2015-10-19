@@ -19,7 +19,7 @@ import io.nucleo.net.TorNode;
 public class TorNodeTest {
 
     private static final int hsPort = 55555;
-    private static CountDownLatch serverLatch = new CountDownLatch(1);
+    private static CountDownLatch serverLatch = new CountDownLatch(2);
     
     private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
 
@@ -29,7 +29,22 @@ public class TorNodeTest {
         for (String str : args)
             System.out.print(str + " ");
         node = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(dir){}; 
-        final ServiceDescriptor hiddenService = node.createHiddenService(hsPort);
+        final ServiceDescriptor hiddenService = node.createHiddenService(hsPort, new HiddenServiceReadyListener() {
+            
+            @Override
+            public void onConnectionFailure(HiddenServiceDescriptor descriptor, Exception cause) {
+                System.err.println("Failed to publish hidden service "+descriptor.getFullAddress());
+                
+            }
+            
+            @Override
+            public void onConnect(HiddenServiceDescriptor descriptor) {
+
+                System.out.println("Successfully published hidden service "+descriptor.getFullAddress());
+               serverLatch.countDown();
+                
+            }
+        });
         new Thread(new Server(hiddenService.getServerSocket())).start();
         serverLatch.await();
 
