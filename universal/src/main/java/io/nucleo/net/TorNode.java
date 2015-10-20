@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.GregorianCalendar;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,7 +35,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         OnionProxyContext ctx = mgr.getOnionProxyContext();
         log.debug("Running Tornode with " + mgr.getClass().getSimpleName() + " and  " + ctx.getClass().getSimpleName());
         tor = initTor(mgr, ctx);
-        executorService = Executors.newFixedThreadPool(1);
+        executorService = Executors.newFixedThreadPool(2);
         int proxyPort = tor.getIPv4LocalHostSocksPort();
         log.info("TorSocks running on port " + proxyPort);
         this.proxy = setupSocksProxy(proxyPort);
@@ -86,7 +87,23 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         final String hiddenServiceName = tor.publishHiddenService(servicePort, localPort);
         final HiddenServiceDescriptor hiddenServiceDescriptor = new HiddenServiceDescriptor(hiddenServiceName,
                 localPort, servicePort);
-
+        final CountDownLatch latch = new CountDownLatch(1);
+        executorService.submit((new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    latch.countDown();
+                    hiddenServiceDescriptor.getServerSocket().accept().close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }));
+        try {
+            latch.await();
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
+        }
         executorService.submit(new Runnable() {
 
             @Override
@@ -106,17 +123,6 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
 
     private void tryConnectToHiddenService(int servicePort, long before, String hiddenServiceName,
             final HiddenServiceDescriptor hiddenServiceDescriptor) throws IOException {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    hiddenServiceDescriptor.getServerSocket().accept().close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-
         for (int i = 0; i < TRIES_PER_HS_STARTUP; ++i) {
             try {
 
