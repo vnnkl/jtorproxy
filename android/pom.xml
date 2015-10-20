@@ -13,10 +13,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <platform.version>4.1.1.4</platform.version>
-    <android.plugin.version>4.0.0-rc.1</android.plugin.version>
+    <android.plugin.version>4.0.0-rc.2</android.plugin.version>
   </properties>
-  <!-- <repositories> <repository> <id>project.local</id> <name>project</name> <url>file:${project.basedir}/repo</url> </repository> 
-    </repositories> -->
   <dependencies>
     <dependency>
       <groupId>com.msopentech.thali</groupId>
@@ -51,16 +49,14 @@
           <androidManifestFile>AndroidManifest.xml</androidManifestFile>
           <resourceDirectory>res</resourceDirectory>
           <assetsDirectory>assets</assetsDirectory>
-          <argLine>-Xmx4096m</argLine>
-          <!-- <source>1.7</source> <target>1.7</target> -->
           <sdk>
             <platform>16</platform>
           </sdk>
           <extractDuplicates>true</extractDuplicates>
         </configuration>
       </plugin>
-      <!-- <plugin> <artifactId>maven-compiler-plugin</artifactId> <configuration> <source>1.7</source> <target>1.7</target> 
-        </configuration> </plugin> -->
+       <plugin> <artifactId>maven-compiler-plugin</artifactId> <configuration> <source>1.6</source> <target>1.6</target>
+        </configuration> </plugin>
     </plugins>
   </build>
 </project>

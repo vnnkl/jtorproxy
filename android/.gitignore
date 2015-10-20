@@ -2,4 +2,5 @@
 /.idea
 *.iml
 gen
+bin
 /target/
