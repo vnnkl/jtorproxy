@@ -15,6 +15,7 @@ import io.nucleo.net.ConnectionListener;
 import io.nucleo.net.DisconnectReason;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.HiddenServiceReadyListener;
+import io.nucleo.net.JavaTorNode;
 import io.nucleo.net.Node;
 import io.nucleo.net.Node.Server;
 import io.nucleo.net.ServerConnectListener;
@@ -70,22 +71,20 @@ public class NodeTest {
     if (args.length == 2) {
       File dir = new File(args[0]);
       dir.mkdirs();
-      TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(
-          dir) {
-      };
-      
+      TorNode<JavaOnionProxyManager, JavaOnionProxyContext> tor = new JavaTorNode(dir);
+
       node = new Node(tor.createHiddenService(Integer.parseInt(args[1]), new HiddenServiceReadyListener() {
-        
+
         @Override
         public void onConnectionFailure(HiddenServiceDescriptor descriptor, Exception cause) {
-          System.err.println("Failed to publish hidden service "+descriptor.getFullAddress());
-          
+          System.err.println("Failed to publish hidden service " + descriptor.getFullAddress());
+
         }
-        
+
         @Override
         public void onConnect(HiddenServiceDescriptor descriptor) {
-        System.out.println("Successfully published hidden service "+descriptor.getFullAddress());
-          
+          System.out.println("Successfully published hidden service " + descriptor.getFullAddress());
+
         }
       }), tor);
     } else {

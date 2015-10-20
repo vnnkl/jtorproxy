@@ -19,17 +19,6 @@
     <module>net</module>
   </modules>
 
-  <build>
-    <plugins>
-
-
-      <!--<plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-enforcer-plugin</artifactId> <version>1.2</version>
-        <executions> <execution> <id>enforce</id> <configuration> <rules> <DependencyConvergence /> </rules> </configuration> <goals>
-        <goal>enforce</goal> </goals> </execution> </executions> </plugin> -->
-
-    </plugins>
-  </build>
-
   <repositories>
     <repository>
       <id>sonatype-oss-snapshot</id>
@@ -46,16 +35,10 @@
     </dependency>
 
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>1.1.2</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.12</version>
     </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.1.2</version>
-    </dependency>
-
     <dependency>
       <groupId>org.jetbrains</groupId>
       <artifactId>annotations</artifactId>

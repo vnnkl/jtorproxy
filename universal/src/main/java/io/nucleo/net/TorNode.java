@@ -32,19 +32,10 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     private final OnionProxyManager tor;
     private final Socks5Proxy proxy;
 
-    @SuppressWarnings("unchecked")
-    public TorNode(File torDirectory) throws IOException, InstantiationException {
-        Class<M> mgr;
-        Class<C> ctx;
-        try {
-            mgr = (Class<M>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-            ctx = (Class<C>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[1];
-        } catch (Throwable t) {
-            throw new InstantiationException(
-                    "Could not reify Types of OnionProxyManager and OnionProxyContext! Is this class being used with raw types?");
-        }
-        log.debug("Running Tornode with " + mgr.getSimpleName() + " and  " + ctx.getSimpleName());
-        tor = initTor(torDirectory, mgr, ctx);
+    public TorNode(M mgr) throws IOException, InstantiationException {
+        OnionProxyContext ctx = mgr.getOnionProxyContext();
+        log.debug("Running Tornode with " + mgr.getClass().getSimpleName() + " and  " + ctx.getClass().getSimpleName());
+        tor = initTor(mgr, ctx);
         executorService = Executors.newFixedThreadPool(1);
         int proxyPort = tor.getIPv4LocalHostSocksPort();
         log.info("TorSocks running on port " + proxyPort);
@@ -132,7 +123,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
                 final Socket socket = connectToHiddenService(hiddenServiceName, servicePort, 1, false);
                 socket.close();
             } catch (IOException e) {
-                log.info("Hidden service " + hiddenServiceName + ":" + servicePort + " is not yet reachable");
+                log.debug("Hidden service " + hiddenServiceName + ":" + servicePort + " is not yet reachable");
                 try {
                     Thread.sleep(RETRY_SLEEP);
                 } catch (InterruptedException e1) {
@@ -154,27 +145,18 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         tor.stop();
     }
 
-    static <M extends OnionProxyManager, C extends OnionProxyContext> OnionProxyManager initTor(File torDir,
-            Class<M> mgrType, Class<C> ctxType) throws IOException {
+    static <M extends OnionProxyManager, C extends OnionProxyContext> OnionProxyManager initTor(final M mgr, C ctx) throws IOException {
 
-        log.debug("Trying to start tor in directory {}", torDir);
-        C ctx;
-        final M onionProxyManager;
+        log.debug("Trying to start tor in directory {}", mgr.getWorkingDirectory());
+        
         try {
-            ctx = ctxType.getConstructor(File.class).newInstance(torDir);
-            onionProxyManager = mgrType.getConstructor(OnionProxyContext.class).newInstance(ctx);
-        } catch (Exception e1) {
-            throw new IOException(e1);
-        }
-
-        try {
-            if (!onionProxyManager.startWithRepeat(TOTAL_SEC_PER_STARTUP, TRIES_PER_STARTUP)) {
+            if (!mgr.startWithRepeat(TOTAL_SEC_PER_STARTUP, TRIES_PER_STARTUP)) {
                 throw new IOException("Could not Start Tor. Is another instance already running?");
             } else {
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     public void run() {
                         try {
-                            onionProxyManager.stop();
+                            mgr.stop();
                         } catch (IOException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -185,6 +167,6 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
-        return onionProxyManager;
+        return mgr;
     }
 }

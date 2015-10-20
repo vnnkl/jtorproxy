@@ -13,36 +13,41 @@ See the Apache 2 License for the specific language governing permissions and lim
 
 package com.msopentech.thali.android.toronionproxy;
 
-import android.content.Context;
-import com.msopentech.thali.toronionproxy.OnionProxyContext;
-import com.msopentech.thali.toronionproxy.WriteObserver;
+import static android.content.Context.MODE_PRIVATE;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static android.content.Context.MODE_PRIVATE;
+import com.msopentech.thali.toronionproxy.OnionProxyContext;
+import com.msopentech.thali.toronionproxy.WriteObserver;
+
+import android.content.Context;
 
 public class AndroidOnionProxyContext extends OnionProxyContext {
-    private final Context context;
+  private final Context context;
 
-    public AndroidOnionProxyContext(Context context, String workingSubDirectoryName) {
-        super(context.getDir(workingSubDirectoryName, MODE_PRIVATE));
-        this.context = context;
-    }
+  public AndroidOnionProxyContext(Context context, String workingSubDirectoryName) {
+    super(context.getDir(workingSubDirectoryName, MODE_PRIVATE));
+    this.context = context;
+  }
 
-    @Override
-    public WriteObserver generateWriteObserver(File file) {
-        return new AndroidWriteObserver(file);
-    }
+  @Override
+  public WriteObserver generateWriteObserver(File file) {
+    return new AndroidWriteObserver(file);
+  }
 
-    @Override
-    protected InputStream getAssetOrResourceByName(String fileName) throws IOException {
-        return context.getResources().getAssets().open(fileName);
+  @Override
+  protected InputStream getAssetOrResourceByName(String fileName) throws IOException {
+    try {
+      return context.getResources().getAssets().open(fileName);
+    } catch (IOException e) {
+      return getClass().getResourceAsStream("/" + fileName);
     }
+  }
 
-    @Override
-    public String getProcessId() {
-        return String.valueOf(android.os.Process.myPid());
-    }
+  @Override
+  public String getProcessId() {
+    return String.valueOf(android.os.Process.myPid());
+  }
 }

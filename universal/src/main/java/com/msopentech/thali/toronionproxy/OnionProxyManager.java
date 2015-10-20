@@ -76,6 +76,10 @@ public abstract class OnionProxyManager {
 
     protected final OnionProxyContext onionProxyContext;
 
+    public OnionProxyContext getOnionProxyContext() {
+        return onionProxyContext;
+    }
+
     private volatile Socket controlSocket = null;
 
     // If controlConnection is not null then this means that a connection exists and the Tor OP will die when
@@ -205,7 +209,6 @@ public abstract class OnionProxyManager {
         // Thanks, Ubuntu!
         try {
             switch (OsData.getOsType()) {
-                case Android:
                 case Linux32:
                 case Linux64: {
                     Set<PosixFilePermission> perms = new HashSet<>();

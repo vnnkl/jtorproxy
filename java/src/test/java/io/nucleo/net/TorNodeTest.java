@@ -28,7 +28,7 @@ public class TorNodeTest {
         dir.mkdirs();
         for (String str : args)
             System.out.print(str + " ");
-        node = new TorNode<JavaOnionProxyManager, JavaOnionProxyContext>(dir){}; 
+        node = new JavaTorNode(dir); 
         final ServiceDescriptor hiddenService = node.createHiddenService(hsPort, new HiddenServiceReadyListener() {
             
             @Override
