@@ -129,13 +129,7 @@ public abstract class OnionProxyManager {
 
                 // Bootstrapping isn't over so we need to restart and try again
                 stop();
-                // Experimentally we have found that if a Tor OP has run before and thus has cached descriptors
-                // and that when we try to start it again it won't start then deleting the cached data can fix this.
-                // But, if there is cached data and things do work then the Tor OP will start faster than it would
-                // if we delete everything.
-                // So our compromise is that we try to start the Tor OP 'as is' on the first round and after that
-                // we delete all the files.
-                onionProxyContext.deleteAllFilesButHiddenServices();
+               
             }
 
             return false;

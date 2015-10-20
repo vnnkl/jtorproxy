@@ -57,6 +57,14 @@ abstract public class OnionProxyContext {
         // do by default, something we hope to fix with
         // https://github.com/thaliproject/Tor_Onion_Proxy_Library/issues/13
         Thread.sleep(1000, 0);
+        
+        // Experimentally we have found that if a Tor OP has run before and thus has cached descriptors
+        // and that when we try to start it again it won't start then deleting the cached data can fix this.
+        // But, if there is cached data and things do work then the Tor OP will start faster than it would
+        // if we delete everything.
+        // So our compromise is that we try to start the Tor OP 'as is' on the first round and after that
+        // we delete all the files.
+        deleteAllFilesButHiddenServices();
 
         try {
             File dotTorDir = new File(getWorkingDirectory(), ".tor");
