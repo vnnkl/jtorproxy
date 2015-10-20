@@ -125,7 +125,8 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
             final HiddenServiceDescriptor hiddenServiceDescriptor) throws IOException {
         for (int i = 0; i < TRIES_PER_HS_STARTUP; ++i) {
             try {
-
+              //Wait for tor 0.2.7  
+              //  System.out.println(tor.isHiddenServiceAvailable(hiddenServiceName));
                 final Socket socket = connectToHiddenService(hiddenServiceName, servicePort, 1, false);
                 socket.close();
             } catch (IOException e) {

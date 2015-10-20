@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.regex.Pattern;
 
 import net.freehaven.tor.control.ConfigEntry;
 import net.freehaven.tor.control.TorControlConnection;
@@ -238,6 +239,17 @@ public abstract class OnionProxyManager {
         LOG.info("Hidden service config has completed.");
 
         return hostname;
+    }
+    
+    public synchronized boolean isHiddenServiceAvailable(String onionurl){
+        try {
+            return controlConnection.isHSAvailable(onionurl.substring(0, onionurl.indexOf(".")));
+        } catch (IOException e) {
+            // We'll have to wait for tor 0.2.7
+            e.printStackTrace();
+            System.err.println("We'll have to wait for Tor 0.2.7 for HSFETCH to work!");
+        }
+        return false;
     }
 
     /**
