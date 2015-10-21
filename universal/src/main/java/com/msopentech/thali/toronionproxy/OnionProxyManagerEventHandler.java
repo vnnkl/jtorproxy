@@ -32,10 +32,10 @@ package com.msopentech.thali.toronionproxy;
 import java.util.Iterator;
 import java.util.List;
 
-import net.freehaven.tor.control.EventHandler;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.freehaven.tor.control.EventHandler;
 
 /**
  * Logs the data we get from notifications from the Tor OP. This is really just
@@ -47,22 +47,22 @@ public class OnionProxyManagerEventHandler implements EventHandler {
     @Override
     public void circuitStatus(String status, String id, String path) {
         String msg = "CircuitStatus: " + id + " " + status + ", " + path;
-        LOG.info(msg);
+        LOG.debug(msg);
     }
 
     @Override
     public void streamStatus(String status, String id, String target) {
-        LOG.info("streamStatus: status: " + status + ", id: " + id + ", target: " + target);
+        LOG.debug("streamStatus: status: " + status + ", id: " + id + ", target: " + target);
     }
 
     @Override
     public void orConnStatus(String status, String orName) {
-        LOG.info("OR connection: status: " + status + ", orName: " + orName);
+        LOG.debug("OR connection: status: " + status + ", orName: " + orName);
     }
 
     @Override
     public void bandwidthUsed(long read, long written) {
-        LOG.info("bandwidthUsed: read: " + read + ", written: " + written);
+        LOG.debug("bandwidthUsed: read: " + read + ", written: " + written);
     }
 
     @Override
@@ -72,17 +72,17 @@ public class OnionProxyManagerEventHandler implements EventHandler {
         while (iterator.hasNext()) {
             stringBuilder.append(iterator.next());
         }
-        LOG.info("newDescriptors: " + stringBuilder.toString());
+        LOG.debug("newDescriptors: " + stringBuilder.toString());
     }
 
     @Override
     public void message(String severity, String msg) {
-        LOG.info("message: severity: " + severity + ", msg: " + msg);
+        LOG.debug("message: severity: " + severity + ", msg: " + msg);
     }
 
     @Override
     public void unrecognized(String type, String msg) {
-        LOG.info("unrecognized: type: " + type + ", msg: " + msg);
+        LOG.debug("unrecognized: type: " + type + ", msg: " + msg);
     }
 
 }

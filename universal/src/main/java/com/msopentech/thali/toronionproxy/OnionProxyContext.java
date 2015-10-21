@@ -45,8 +45,7 @@ abstract public class OnionProxyContext {
         torrcFile = new File(getWorkingDirectory(), torrcName);
         torExecutableFile = new File(getWorkingDirectory(), getTorExecutableFileName());
         cookieFile = new File(getWorkingDirectory(), ".tor/control_auth_cookie");
-        hostnameFile = new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName
-                + "/hostname");
+        hostnameFile = new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName + "/hostname");
     }
 
     public void installFiles() throws IOException, InterruptedException {
@@ -57,12 +56,16 @@ abstract public class OnionProxyContext {
         // do by default, something we hope to fix with
         // https://github.com/thaliproject/Tor_Onion_Proxy_Library/issues/13
         Thread.sleep(1000, 0);
-        
-        // Experimentally we have found that if a Tor OP has run before and thus has cached descriptors
-        // and that when we try to start it again it won't start then deleting the cached data can fix this.
-        // But, if there is cached data and things do work then the Tor OP will start faster than it would
+
+        // Experimentally we have found that if a Tor OP has run before and thus
+        // has cached descriptors
+        // and that when we try to start it again it won't start then deleting
+        // the cached data can fix this.
+        // But, if there is cached data and things do work then the Tor OP will
+        // start faster than it would
         // if we delete everything.
-        // So our compromise is that we try to start the Tor OP 'as is' on the first round and after that
+        // So our compromise is that we try to start the Tor OP 'as is' on the
+        // first round and after that
         // we delete all the files.
         deleteAllFilesButHiddenServices();
 
@@ -78,23 +81,7 @@ abstract public class OnionProxyContext {
 
         FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(geoIpName), geoIpFile);
         FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(geoIpv6Name), geoIpv6File);
-        FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(torrcName), torrcFile);
-
-        switch (OsData.getOsType()) {
-            case Android:
-                FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(getPathToTorExecutable()
-                        + getTorExecutableFileName()), torExecutableFile);
-                break;
-            case Windows:
-            case Linux32:
-            case Linux64:
-            case Mac:
-                FileUtilities.extractContentFromZip(getWorkingDirectory(),
-                        getAssetOrResourceByName(getPathToTorExecutable() + "tor.zip"));
-                break;
-            default:
-                throw new RuntimeException("We don't support Tor on this OS yet");
-        }
+        FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(torrcName), torrcFile);      
     }
 
     /**
@@ -187,42 +174,9 @@ abstract public class OnionProxyContext {
      * 
      * @return Path to executable in JAR Resources
      */
-    protected String getPathToTorExecutable() {
-        String path = "native/";
-        switch (OsData.getOsType()) {
-            case Android:
-                return "";
-            case Windows:
-                return path + "windows/x86/"; // We currently only support the
-                                              // x86 build but that should work
-                                              // everywhere
-            case Mac:
-                return path + "osx/x64/"; // I don't think there even is a x32
-                                          // build of Tor for Mac, but could be
-                                          // wrong.
-            case Linux32:
-                return path + "linux/x86/";
-            case Linux64:
-                return path + "linux/x64/";
-            default:
-                throw new RuntimeException("We don't support Tor on this OS");
-        }
-    }
+    protected abstract String getPathToTorExecutable() ;
 
-    protected String getTorExecutableFileName() {
-        switch (OsData.getOsType()) {
-            case Android:
-            case Linux32:
-            case Linux64:
-                return "tor";
-            case Windows:
-                return "tor.exe";
-            case Mac:
-                return "tor.real";
-            default:
-                throw new RuntimeException("We don't support Tor on this OS");
-        }
-    }
+    protected abstract String getTorExecutableFileName() ;
 
     abstract public String getProcessId();
 
