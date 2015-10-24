@@ -21,9 +21,10 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     static final String PROXY_LOCALHOST = "127.0.0.1";
     private static final int SLEEP_UNTIL_FIRST_HS_TEST = 30 * 1000;
     private static final int RETRY_SLEEP = 500;
+    private static final int PROGRESSION = 200;
     private static final int TOTAL_SEC_PER_STARTUP = 4 * 60;
     private static final int TRIES_PER_STARTUP = 5;
-    private static final int TRIES_PER_HS_STARTUP = 50;
+    private static final int TRIES_PER_HS_STARTUP = 30;
 
     private final ExecutorService executorService;
 
@@ -139,8 +140,13 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
             } catch (IOException e) {
                 log.info("Hidden service " + hiddenServiceName + ":" + servicePort + " is not yet reachable");
                 // wait a random interval of 0.5-3 sec. until retry, add a 200 ms increase at every retry
+                // total time before final timeout is thrown is between 2.2 and 3.5 minutes (incl. initial wait time)
+                // with RETRY_SLEEP=500, PROGRESSION=200 and TRIES_PER_HS_STARTUP=30 
+                // minTotalTimeInMinutes=(RETRY_SLEEP*TRIES_PER_HS_STARTUP 
+                //                  + PROGRESSION*TRIES_PER_HS_STARTUP*(TRIES_PER_HS_STARTUP-1)/2 
+                //                  + SLEEP_UNTIL_FIRST_HS_TEST)/60000
                 try {
-                    Thread.sleep(RETRY_SLEEP + new Random().nextInt(2500) + i * 200);
+                    Thread.sleep(RETRY_SLEEP + new Random().nextInt(2500) + i * PROGRESSION);
                 } catch (InterruptedException e1) {
                 }
                 continue;
