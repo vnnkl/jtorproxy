@@ -48,7 +48,7 @@ abstract public class OnionProxyContext {
         hostnameFile = new File(getWorkingDirectory(), "/" + hiddenserviceDirectoryName + "/hostname");
     }
 
-    public void installFiles() throws IOException, InterruptedException {
+    protected void installFiles() throws IOException, InterruptedException {
         // This is sleezy but we have cases where an old instance of the Tor OP
         // needs an extra second to
         // clean itself up. Without that time we can't do things like delete its
@@ -90,7 +90,7 @@ abstract public class OnionProxyContext {
      * @param processBuilder
      *            we will call start on this to run Tor
      */
-    public void setEnvironmentArgsAndWorkingDirectoryForStart(ProcessBuilder processBuilder) {
+    void setEnvironmentArgsAndWorkingDirectoryForStart(ProcessBuilder processBuilder) {
         processBuilder.directory(getWorkingDirectory());
         Map<String, String> environment = processBuilder.environment();
         environment.put("HOME", getWorkingDirectory().getAbsolutePath());
@@ -150,7 +150,7 @@ abstract public class OnionProxyContext {
         return workingDirectory;
     }
 
-    public void deleteAllFilesButHiddenServices() throws InterruptedException {
+    void deleteAllFilesButHiddenServices() throws InterruptedException {
         // It can take a little bit for the Tor OP to detect the connection is
         // dead and kill itself
         Thread.sleep(1000);

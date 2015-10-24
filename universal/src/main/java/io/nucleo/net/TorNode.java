@@ -31,7 +31,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
     private final OnionProxyManager tor;
     private final Socks5Proxy proxy;
 
-    public TorNode(M mgr) throws IOException, InstantiationException {
+    public TorNode(M mgr) throws IOException {
         OnionProxyContext ctx = mgr.getOnionProxyContext();
         log.debug("Running Tornode with " + mgr.getClass().getSimpleName() + " and  " + ctx.getClass().getSimpleName());
         tor = initTor(mgr, ctx);

@@ -9,7 +9,7 @@ import android.content.Context;
 
 public class AndroidTorNode extends TorNode<AndroidOnionProxyManager, AndroidOnionProxyContext> {
 
-  public AndroidTorNode(String torDirectoryName, Context ctx) throws IOException, InstantiationException {
+  public AndroidTorNode(String torDirectoryName, Context ctx) throws IOException {
     super(new AndroidOnionProxyManager(ctx, torDirectoryName));
   }
 

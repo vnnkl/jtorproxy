@@ -8,7 +8,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
 public class JavaTorNode extends TorNode<JavaOnionProxyManager, JavaOnionProxyContext> {
 
-    public JavaTorNode(File torDirectory) throws IOException, InstantiationException {
+    public JavaTorNode(File torDirectory) throws IOException {
         super(new JavaOnionProxyManager(new JavaOnionProxyContext(torDirectory)));
     }
 
