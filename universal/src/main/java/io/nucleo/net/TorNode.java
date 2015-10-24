@@ -1,5 +1,12 @@
 package io.nucleo.net;
 
+import com.msopentech.thali.toronionproxy.OnionProxyContext;
+import com.msopentech.thali.toronionproxy.OnionProxyManager;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -7,14 +14,6 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.msopentech.thali.toronionproxy.OnionProxyContext;
-import com.msopentech.thali.toronionproxy.OnionProxyManager;
-import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 
 public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyContext> {
 
@@ -109,7 +108,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
             @Override
             public void run() {
                 try {
-                    tryConnectToHiddenService(servicePort, before, hiddenServiceName, hiddenServiceDescriptor);
+                    tryConnectToHiddenService(servicePort, before, hiddenServiceName);
                     listener.onConnect(hiddenServiceDescriptor);
                 } catch (IOException e) {
                     listener.onConnectionFailure(hiddenServiceDescriptor, e);
@@ -121,8 +120,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
 
     }
 
-    private void tryConnectToHiddenService(int servicePort, long before, String hiddenServiceName,
-            final HiddenServiceDescriptor hiddenServiceDescriptor) throws IOException {
+    private void tryConnectToHiddenService(int servicePort, long before, String hiddenServiceName) throws IOException {
         for (int i = 0; i < TRIES_PER_HS_STARTUP; ++i) {
             try {
               //Wait for tor 0.2.7  
