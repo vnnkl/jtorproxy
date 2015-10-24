@@ -144,7 +144,7 @@ public abstract class TorNode<M extends OnionProxyManager, C extends OnionProxyC
                 // with RETRY_SLEEP=500, PROGRESSION=200 and TRIES_PER_HS_STARTUP=30 
                 // minTotalTimeInMinutes=(RETRY_SLEEP*TRIES_PER_HS_STARTUP 
                 //                  + PROGRESSION*TRIES_PER_HS_STARTUP*(TRIES_PER_HS_STARTUP-1)/2 
-                //                  + SLEEP_UNTIL_FIRST_HS_TEST)/60000
+                //                  + SLEEP_UNTIL_FIRST_HS_TEST)/60000 
                 try {
                     Thread.sleep(RETRY_SLEEP + new Random().nextInt(2500) + i * PROGRESSION);
                 } catch (InterruptedException e1) {
