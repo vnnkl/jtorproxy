@@ -12,6 +12,6 @@
 
     <logger name="com.msopentech" level="TRACE"/>
     <logger name="io.nucleo" level="TRACE"/>
-    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
+    <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="DEBUG"/>
 
 </configuration>

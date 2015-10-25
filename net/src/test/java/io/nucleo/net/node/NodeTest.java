@@ -3,6 +3,7 @@ package io.nucleo.net.node;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -76,14 +77,8 @@ public class NodeTest {
       node = new Node(tor.createHiddenService(Integer.parseInt(args[1]), new HiddenServiceReadyListener() {
 
         @Override
-        public void onConnectionFailure(HiddenServiceDescriptor descriptor, Exception cause) {
-          System.err.println("Failed to publish hidden service " + descriptor.getFullAddress());
-
-        }
-
-        @Override
         public void onConnect(HiddenServiceDescriptor descriptor) {
-          System.out.println("Successfully published hidden service " + descriptor.getFullAddress());
+          System.out.println("Successfully published hidden service " + descriptor.getFullAddress() + " ");
 
         }
       }), tor);
@@ -159,7 +154,7 @@ public class NodeTest {
         default:
           break;
       }
-      System.out.print("\n" + node.getLocalName() + ":" + (currentCon == null ? "" : currentCon.getPeer()) + " >");
+      System.out.print("\n" + node.getLocalName() + (currentCon == null ? "" : (":" + currentCon.getPeer())) + " >");
     }
 
   }

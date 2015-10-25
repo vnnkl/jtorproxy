@@ -35,6 +35,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.nucleo.net.HiddenServiceDescriptor;
+import io.nucleo.net.HiddenServiceReadyListener;
 import net.freehaven.tor.control.EventHandler;
 
 /**
@@ -43,6 +45,19 @@ import net.freehaven.tor.control.EventHandler;
  */
 public class OnionProxyManagerEventHandler implements EventHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OnionProxyManagerEventHandler.class);
+    private HiddenServiceDescriptor hs;
+    private HiddenServiceReadyListener listener;
+    private boolean hsPublished;
+
+    public void setHStoWatchFor(HiddenServiceDescriptor hs, HiddenServiceReadyListener listener) {
+        if (hs == this.hs && hsPublished) {
+            listener.onConnect(hs);
+            return;
+        }
+        this.listener = listener;
+        this.hs = hs;
+        hsPublished = false;
+    }
 
     @Override
     public void circuitStatus(String status, String id, String path) {
@@ -52,17 +67,21 @@ public class OnionProxyManagerEventHandler implements EventHandler {
 
     @Override
     public void streamStatus(String status, String id, String target) {
-        LOG.debug("streamStatus: status: " + status + ", id: " + id + ", target: " + target);
+        final String msg = "streamStatus: status: " + status + ", id: " + id + ", target: " + target;
+        LOG.debug(msg);
+
     }
 
     @Override
     public void orConnStatus(String status, String orName) {
-        LOG.debug("OR connection: status: " + status + ", orName: " + orName);
+        final String msg = "OR connection: status: " + status + ", orName: " + orName;
+        LOG.debug(msg);
     }
 
     @Override
     public void bandwidthUsed(long read, long written) {
         LOG.debug("bandwidthUsed: read: " + read + ", written: " + written);
+
     }
 
     @Override
@@ -72,17 +91,32 @@ public class OnionProxyManagerEventHandler implements EventHandler {
         while (iterator.hasNext()) {
             stringBuilder.append(iterator.next());
         }
-        LOG.debug("newDescriptors: " + stringBuilder.toString());
+        final String msg = "newDescriptors: " + stringBuilder.toString();
+        LOG.debug(msg);
+
     }
 
     @Override
     public void message(String severity, String msg) {
-        LOG.debug("message: severity: " + severity + ", msg: " + msg);
+        final String msg2 = "message: severity: " + severity + ", msg: " + msg;
+        LOG.debug(msg2);
+        if (severity.equalsIgnoreCase("INFO"))
+            checkforHS(msg);
     }
 
     @Override
     public void unrecognized(String type, String msg) {
-        LOG.debug("unrecognized: type: " + type + ", msg: " + msg);
+        final String msg2 = "unrecognized: type: " + type + ", msg: " + msg;
+        LOG.debug(msg2);
     }
 
+    private void checkforHS(String msg) {
+        if (hs == null || hsPublished == true)
+            return;
+        String pattern = "uploading rendezvous descriptor";
+        if (msg.toLowerCase().contains(pattern)) {
+            hsPublished = true;
+            listener.onConnect(hs);
+        }
+    }
 }

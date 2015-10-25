@@ -14,35 +14,28 @@ import java.util.concurrent.ExecutionException;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyContext;
 import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 
-import io.nucleo.net.TorNode;
-
 public class TorNodeTest {
 
     private static final int hsPort = 55555;
     private static CountDownLatch serverLatch = new CountDownLatch(2);
-    
+
     private static TorNode<JavaOnionProxyManager, JavaOnionProxyContext> node;
 
-    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException, InstantiationException {
+    public static void main(String[] args)
+            throws IOException, InterruptedException, ExecutionException, InstantiationException {
         File dir = new File("tor-test");
         dir.mkdirs();
         for (String str : args)
             System.out.print(str + " ");
-        node = new JavaTorNode(dir); 
+        node = new JavaTorNode(dir);
         final ServiceDescriptor hiddenService = node.createHiddenService(hsPort, new HiddenServiceReadyListener() {
-            
-            @Override
-            public void onConnectionFailure(HiddenServiceDescriptor descriptor, Exception cause) {
-                System.err.println("Failed to publish hidden service "+descriptor.getFullAddress());
-                
-            }
-            
+
             @Override
             public void onConnect(HiddenServiceDescriptor descriptor) {
 
-                System.out.println("Successfully published hidden service "+descriptor.getFullAddress());
-               serverLatch.countDown();
-                
+                System.out.println("Successfully published hidden service " + descriptor.getFullAddress());
+                serverLatch.countDown();
+
             }
         });
         new Thread(new Server(hiddenService.getServerSocket())).start();
@@ -114,7 +107,8 @@ public class TorNodeTest {
                 while (true) {
 
                     Socket sock = socket.accept();
-                    System.out.println("Accepting Client "+sock.getRemoteSocketAddress() +" on port " + sock.getLocalPort());
+                    System.out.println(
+                            "Accepting Client " + sock.getRemoteSocketAddress() + " on port " + sock.getLocalPort());
                     BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
                     OutputStreamWriter out = new OutputStreamWriter(sock.getOutputStream());
                     String aLine = null;
