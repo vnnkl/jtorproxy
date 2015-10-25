@@ -116,6 +116,7 @@ public class OnionProxyManagerEventHandler implements EventHandler {
         String pattern = "uploading rendezvous descriptor";
         if (msg.toLowerCase().contains(pattern)) {
             hsPublished = true;
+            LOG.info("Hidden service "+hs.getFullAddress() +" published.");
             listener.onConnect(hs);
         }
     }
