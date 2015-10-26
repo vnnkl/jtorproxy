@@ -69,7 +69,8 @@ import net.freehaven.tor.control.TorControlConnection;
  * This class began life as TorPlugin from the Briar Project
  */
 public abstract class OnionProxyManager {
-    private static final String[] EVENTS = { "EXTENDED", "CIRC", "ORCONN", "INFO", "NOTICE", "WARN", "ERR", "HS_DESC" };
+    private static final String[] EVENTS = { "CIRC", "WARN", "ERR" };
+    private static final String[] EVENTS_HS = { "EXTENDED", "CIRC", "ORCONN", "INFO", "NOTICE", "WARN", "ERR", "HS_DESC" };
 
     private static final String OWNER = "__OwningControllerProcess";
     private static final int COOKIE_TIMEOUT = 3 * 1000; // Milliseconds
@@ -242,6 +243,8 @@ public abstract class OnionProxyManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        controlConnection.setEvents(Arrays.asList(EVENTS_HS));
         // Watch for the hostname file being created/updated
         WriteObserver hostNameFileObserver = onionProxyContext.generateWriteObserver(hostnameFile);
         // Use the control connection to update the Tor config
