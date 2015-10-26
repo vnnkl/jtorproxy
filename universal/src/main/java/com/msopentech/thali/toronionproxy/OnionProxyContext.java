@@ -56,18 +56,11 @@ abstract public class OnionProxyContext {
         // do by default, something we hope to fix with
         // https://github.com/thaliproject/Tor_Onion_Proxy_Library/issues/13
         Thread.sleep(1000, 0);
-
-        // Experimentally we have found that if a Tor OP has run before and thus
-        // has cached descriptors
-        // and that when we try to start it again it won't start then deleting
-        // the cached data can fix this.
-        // But, if there is cached data and things do work then the Tor OP will
-        // start faster than it would
-        // if we delete everything.
-        // So our compromise is that we try to start the Tor OP 'as is' on the
-        // first round and after that
-        // we delete all the files.
-        deleteAllFilesButHiddenServices();
+        for (File f : getWorkingDirectory().listFiles()) {
+            if (f.getAbsolutePath().startsWith(torrcFile.getAbsolutePath())) {
+                f.delete();
+            }
+        }
 
         try {
             File dotTorDir = new File(getWorkingDirectory(), ".tor");
@@ -81,7 +74,7 @@ abstract public class OnionProxyContext {
 
         FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(geoIpName), geoIpFile);
         FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(geoIpv6Name), geoIpv6File);
-        FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(torrcName), torrcFile);      
+        FileUtilities.cleanInstallOneFile(getAssetOrResourceByName(torrcName), torrcFile);
     }
 
     /**
@@ -174,9 +167,9 @@ abstract public class OnionProxyContext {
      * 
      * @return Path to executable in JAR Resources
      */
-    protected abstract String getPathToTorExecutable() ;
+    protected abstract String getPathToTorExecutable();
 
-    protected abstract String getTorExecutableFileName() ;
+    protected abstract String getTorExecutableFileName();
 
     abstract public String getProcessId();
 
