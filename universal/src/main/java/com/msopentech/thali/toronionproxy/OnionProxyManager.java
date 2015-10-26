@@ -240,7 +240,8 @@ public abstract class OnionProxyManager {
         try {
             switch (OsData.getOsType()) {
                 case Linux32:
-                case Linux64: {
+                case Linux64:
+                case Mac:{
                     Set<PosixFilePermission> perms = new HashSet<>();
                     perms.add(PosixFilePermission.OWNER_READ);
                     perms.add(PosixFilePermission.OWNER_WRITE);

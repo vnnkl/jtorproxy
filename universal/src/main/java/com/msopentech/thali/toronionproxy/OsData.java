@@ -86,7 +86,7 @@ public class OsData {
                 throw new RuntimeException("Uname returned error code " + exit);
             }
 
-            if (unameOutput.compareTo("i686") == 0) {
+            if (unameOutput.matches("i.86")) {
                 return OsType.Linux32;
             }
             if (unameOutput.compareTo("x86_64") == 0) {
