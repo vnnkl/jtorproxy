@@ -16,7 +16,6 @@ package com.msopentech.thali.toronionproxy;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,12 +55,13 @@ abstract public class OnionProxyContext {
         // do by default, something we hope to fix with
         // https://github.com/thaliproject/Tor_Onion_Proxy_Library/issues/13
         Thread.sleep(1000, 0);
-        for (File f : getWorkingDirectory().listFiles()) {
-            if (f.getAbsolutePath().startsWith(torrcFile.getAbsolutePath())) {
-                f.delete();
+        if (getWorkingDirectory().listFiles() != null) {
+            for (File f : getWorkingDirectory().listFiles()) {
+                if (f.getAbsolutePath().startsWith(torrcFile.getAbsolutePath())) {
+                    f.delete();
+                }
             }
         }
-
         try {
             File dotTorDir = new File(getWorkingDirectory(), ".tor");
             if (dotTorDir.exists())
